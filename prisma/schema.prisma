@@ -1,0 +1,98 @@
+// Prisma schema for the Devminified Project Hub
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         Role      @default(USER)
+  projects     Project[] @relation("ProjectAccess")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum ProjectStatus {
+  Production
+  Staging
+  Development
+}
+
+enum EnvScope {
+  Production
+  Preview
+  Development
+}
+
+enum Component {
+  FRONTEND
+  BACKEND
+  DB
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  description   String
+  status        ProjectStatus @default(Development)
+  tags          String[]
+  productionUrl String?
+  stagingUrl    String?
+  envs        EnvVar[]
+  docs        Doc[]
+  readmes     Readme[]
+  members     User[]        @relation("ProjectAccess")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model EnvVar {
+  id        String     @id @default(cuid())
+  key       String
+  value     String
+  scope     EnvScope   @default(Development)
+  component Component?
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  @@index([projectId])
+}
+
+model Doc {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  component   Component?
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([projectId])
+}
+
+model Readme {
+  id        String     @id @default(cuid())
+  title     String
+  content   String
+  component Component?
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  @@index([projectId])
+}
