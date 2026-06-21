@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import {
   createProject,
   deleteProject,
@@ -27,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export type ProjectInput = {
   id: string
@@ -34,8 +36,6 @@ export type ProjectInput = {
   description: string
   status: "Production" | "Staging" | "Development"
   tags: string[]
-  productionUrl: string | null
-  stagingUrl: string | null
 }
 
 const textareaClass =
@@ -93,10 +93,10 @@ function ProjectDialog({
               <textarea
                 id="description"
                 name="description"
-                rows={3}
+                rows={6}
                 defaultValue={project?.description ?? ""}
                 placeholder="What is this project about?"
-                className={textareaClass}
+                className={cn(textareaClass, "min-h-32")}
               />
             </div>
 
@@ -126,31 +126,6 @@ function ProjectDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="productionUrl">Production URL</Label>
-                <Input
-                  id="productionUrl"
-                  name="productionUrl"
-                  type="url"
-                  defaultValue={project?.productionUrl ?? ""}
-                  placeholder="https://onlinecook.com"
-                  className="h-10"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="stagingUrl">Staging URL</Label>
-                <Input
-                  id="stagingUrl"
-                  name="stagingUrl"
-                  type="url"
-                  defaultValue={project?.stagingUrl ?? ""}
-                  placeholder="https://staging.onlinecook.com"
-                  className="h-10"
-                />
-              </div>
-            </div>
-
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
           </div>
 
@@ -161,7 +136,7 @@ function ProjectDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-cyan)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save changes" : "Create project"}
             </Button>
@@ -178,9 +153,9 @@ export function ProjectCreateButton() {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="gap-1.5 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-cyan)] text-white"
+        className="h-11 gap-2 rounded-xl bg-[var(--brand-cyan)] px-6 text-base font-semibold text-white shadow-sm shadow-cyan-500/20 transition-colors hover:bg-[var(--brand-cyan)]/90"
       >
-        <Plus className="size-4" />
+        <Plus className="size-5" />
         New project
       </Button>
       <ProjectDialog key={open ? "open" : "closed"} open={open} onOpenChange={setOpen} project={null} />
@@ -191,9 +166,16 @@ export function ProjectCreateButton() {
 export function ProjectActions({ project }: { project: ProjectInput }) {
   const [open, setOpen] = useState(false)
   const [isDeleting, startDelete] = useTransition()
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
-  function handleDelete() {
-    if (!confirm(`Delete ${project.name}? This removes all its data.`)) return
+  async function handleDelete() {
+    const ok = await confirm({
+      title: "Delete project?",
+      description: `Delete ${project.name}? This removes all its data.`,
+      confirmLabel: "Delete",
+      destructive: true,
+    })
+    if (!ok) return
     startDelete(async () => {
       await deleteProject(project.id)
     })
@@ -221,6 +203,7 @@ export function ProjectActions({ project }: { project: ProjectInput }) {
         onOpenChange={setOpen}
         project={project}
       />
+      {confirmDialog}
     </div>
   )
 }

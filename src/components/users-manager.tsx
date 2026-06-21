@@ -1,12 +1,24 @@
 "use client"
 
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react"
-import { FolderKanban, MoreHorizontal, Plus, Search, Trash2, UserPen } from "lucide-react"
+import {
+  Check,
+  Clock,
+  FolderKanban,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  UserPen,
+  X,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
+  approveUser,
   createUser,
   deleteUser,
+  rejectUser,
   setUserProjects,
   updateUser,
   type UserActionState,
@@ -24,11 +36,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/animate-ui/components/radix/popover"
 import {
   Select,
   SelectContent,
@@ -44,17 +56,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useConfirm } from "@/hooks/use-confirm"
 
 export type UserRow = {
   id: string
   email: string
   name: string | null
   role: "ADMIN" | "USER"
+  status: "PENDING" | "APPROVED"
   createdAt: string
   projectIds: string[]
 }
 
 export type ProjectOption = { id: string; name: string }
+
+const actionItemClass =
+  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 focus-visible:bg-slate-100 focus-visible:outline-none"
 
 export function UsersManager({
   users,
@@ -69,6 +86,30 @@ export function UsersManager({
   const [editing, setEditing] = useState<UserRow | null>(null)
   const [accessUser, setAccessUser] = useState<UserRow | null>(null)
   const [isDeleting, startDelete] = useTransition()
+  const [isReviewing, startReview] = useTransition()
+  const { confirm, dialog: confirmDialog } = useConfirm()
+
+  const pending = users.filter((u) => u.status === "PENDING")
+  const approved = users.filter((u) => u.status === "APPROVED")
+
+  function handleApprove(user: UserRow) {
+    startReview(async () => {
+      await approveUser(user.id)
+    })
+  }
+
+  async function handleReject(user: UserRow) {
+    const ok = await confirm({
+      title: "Reject request?",
+      description: `Reject ${user.email}? Their signup request will be removed.`,
+      confirmLabel: "Reject",
+      destructive: true,
+    })
+    if (!ok) return
+    startReview(async () => {
+      await rejectUser(user.id)
+    })
+  }
 
   function openCreate() {
     setEditing(null)
@@ -80,8 +121,14 @@ export function UsersManager({
     setDialogOpen(true)
   }
 
-  function handleDelete(user: UserRow) {
-    if (!confirm(`Delete ${user.email}? This cannot be undone.`)) return
+  async function handleDelete(user: UserRow) {
+    const ok = await confirm({
+      title: "Delete user?",
+      description: `Delete ${user.email}? This cannot be undone.`,
+      confirmLabel: "Delete",
+      destructive: true,
+    })
+    if (!ok) return
     startDelete(async () => {
       await deleteUser(user.id)
     })
@@ -89,90 +136,173 @@ export function UsersManager({
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Team members
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            {users.length} {users.length === 1 ? "user" : "users"} can sign in to
-            this platform.
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            {approved.length} {approved.length === 1 ? "user" : "users"} can sign
+            in to this platform.
           </p>
         </div>
         <Button
           onClick={openCreate}
-          className="gap-1.5 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-cyan)] text-white"
+          className="h-11 gap-2 rounded-xl bg-[var(--brand-cyan)] px-6 text-base font-semibold text-white shadow-sm shadow-cyan-500/20 transition-colors hover:bg-[var(--brand-cyan)]/90"
         >
-          <Plus className="size-4" />
+          <Plus className="size-5" />
           Add user
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      {pending.length > 0 && (
+        <div className="mb-6 overflow-hidden rounded-xl border border-amber-200 bg-amber-50/40">
+          <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-3">
+            <Clock className="size-4 text-amber-600" />
+            <h3 className="text-sm font-semibold text-amber-900">
+              Pending requests
+            </h3>
+            <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-800">
+              {pending.length}
+            </span>
+          </div>
+          <ul className="divide-y divide-amber-100">
+            {pending.map((user) => (
+              <li
+                key={user.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-800">
+                    {user.name || "—"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{user.email}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="hidden text-xs text-slate-400 sm:inline">
+                    Requested {user.createdAt}
+                  </span>
+                  <Button
+                    size="sm"
+                    disabled={isReviewing}
+                    onClick={() => handleApprove(user)}
+                    className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    <Check className="size-3.5" />
+                    Accept
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isReviewing}
+                    onClick={() => handleReject(user)}
+                    className="gap-1.5 text-red-600 hover:border-red-300 hover:text-red-700"
+                  >
+                    <X className="size-3.5" />
+                    Reject
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Added</TableHead>
-              <TableHead className="w-12" />
+          <TableHeader className="bg-slate-50/80">
+            <TableRow className="border-slate-200 hover:bg-transparent">
+              <TableHead className="h-11 px-5 text-xs font-bold uppercase tracking-wide text-slate-700">
+                Name
+              </TableHead>
+              <TableHead className="h-11 px-5 text-xs font-bold uppercase tracking-wide text-slate-700">
+                Email
+              </TableHead>
+              <TableHead className="h-11 px-5 text-xs font-bold uppercase tracking-wide text-slate-700">
+                Role
+              </TableHead>
+              <TableHead className="h-11 px-5 text-xs font-bold uppercase tracking-wide text-slate-700">
+                Added
+              </TableHead>
+              <TableHead className="w-12 px-5" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium text-slate-800">
+            {approved.map((user) => (
+              <TableRow key={user.id} className="border-slate-100 hover:bg-slate-50/70">
+                <TableCell className="px-5 py-4 font-medium text-slate-800">
                   {user.name || "—"}
                   {user.id === currentUserId && (
                     <span className="ml-2 text-xs text-slate-400">(you)</span>
                   )}
                 </TableCell>
-                <TableCell className="text-slate-600">{user.email}</TableCell>
-                <TableCell>
+                <TableCell className="px-5 py-4 text-slate-600">
+                  {user.email}
+                </TableCell>
+                <TableCell className="px-5 py-4">
                   <Badge
-                    variant={user.role === "ADMIN" ? "default" : "secondary"}
-                    className={
+                    variant="secondary"
+                    className={cn(
+                      "rounded-full",
                       user.role === "ADMIN"
-                        ? "bg-blue-100 text-blue-700"
-                        : undefined
-                    }
+                        ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200"
+                        : "bg-slate-100 text-slate-600 ring-1 ring-slate-200"
+                    )}
                   >
                     {user.role === "ADMIN" ? "Admin" : "Member"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-slate-500">{user.createdAt}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button variant="ghost" size="icon-sm" aria-label="Actions">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end" className="min-w-44">
-                      {/* wide enough to keep items on one line */}
-                      <DropdownMenuItem onClick={() => openEdit(user)}>
-                        <UserPen className="size-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      {user.role !== "ADMIN" && (
-                        <DropdownMenuItem onClick={() => setAccessUser(user)}>
-                          <FolderKanban className="size-4" />
-                          Add to project
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        disabled={user.id === currentUserId || isDeleting}
-                        onClick={() => handleDelete(user)}
-                        variant="destructive"
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <TableCell className="px-5 py-4 text-slate-500">
+                  {user.createdAt}
+                </TableCell>
+                <TableCell className="px-5 py-4">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon-sm" aria-label="Actions">
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-48 p-1.5">
+                      <div className="grid gap-0.5">
+                        <PopoverClose asChild>
+                          <button
+                            type="button"
+                            onClick={() => openEdit(user)}
+                            className={actionItemClass}
+                          >
+                            <UserPen className="size-4" />
+                            Edit
+                          </button>
+                        </PopoverClose>
+                        {user.role !== "ADMIN" && (
+                          <PopoverClose asChild>
+                            <button
+                              type="button"
+                              onClick={() => setAccessUser(user)}
+                              className={actionItemClass}
+                            >
+                              <FolderKanban className="size-4" />
+                              Add to project
+                            </button>
+                          </PopoverClose>
+                        )}
+                        <PopoverClose asChild>
+                          <button
+                            type="button"
+                            disabled={user.id === currentUserId || isDeleting}
+                            onClick={() => handleDelete(user)}
+                            className={cn(
+                              actionItemClass,
+                              "text-red-600 hover:bg-red-50 hover:text-red-700 disabled:pointer-events-none disabled:opacity-50"
+                            )}
+                          >
+                            <Trash2 className="size-4" />
+                            Delete
+                          </button>
+                        </PopoverClose>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </TableCell>
               </TableRow>
             ))}
@@ -193,6 +323,8 @@ export function UsersManager({
         allProjects={allProjects}
         onClose={() => setAccessUser(null)}
       />
+
+      {confirmDialog}
     </div>
   )
 }
@@ -318,7 +450,7 @@ function ProjectAccessDialog({
           <Button
             onClick={handleSave}
             disabled={pending}
-            className="bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-cyan)] text-white"
+            className="bg-[var(--brand-cyan)] text-white"
           >
             {pending ? "Saving…" : "Save access"}
           </Button>
@@ -431,7 +563,7 @@ function UserDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-cyan)] text-white"
             >
               {pending
                 ? "Saving…"

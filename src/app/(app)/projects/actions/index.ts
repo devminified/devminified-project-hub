@@ -1,0 +1,19 @@
+/**
+ * Barrel for the project server actions, split by domain into sibling files.
+ * Import from `@/app/(app)/projects/actions` as before.
+ */
+export type { ActionState } from "./helpers"
+export {
+  createProject,
+  updateProject,
+  updateProjectDetails,
+  deleteProject,
+} from "./projects"
+export { createEnv, createEnvsBulk, updateEnv, deleteEnv } from "./envs"
+export { createDoc, createDocsBulk, updateDoc, deleteDoc } from "./docs"
+export {
+  createReadme,
+  createReadmesBulk,
+  updateReadme,
+  deleteReadme,
+} from "./readmes"

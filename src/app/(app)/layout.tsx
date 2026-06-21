@@ -1,6 +1,9 @@
 import { getCurrentUser } from "@/lib/dal"
 import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "@/components/animate-ui/components/radix/sidebar"
 
 export default async function AppLayout({
   children,

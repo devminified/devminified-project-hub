@@ -15,15 +15,23 @@ enum Role {
   USER
 }
 
+enum UserStatus {
+  PENDING
+  APPROVED
+}
+
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   name         String?
   passwordHash String
-  role         Role      @default(USER)
-  projects     Project[] @relation("ProjectAccess")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         Role       @default(USER)
+  // Signups start PENDING and can't sign in until an admin approves them.
+  // Admin-created users default to APPROVED.
+  status       UserStatus @default(APPROVED)
+  projects     Project[]  @relation("ProjectAccess")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 enum ProjectStatus {
@@ -51,8 +59,9 @@ model Project {
   description   String
   status        ProjectStatus @default(Development)
   tags          String[]
-  productionUrl String?
-  stagingUrl    String?
+  // Admin-editable detail sections: an array of { heading, links: [{ label, url }] }.
+  // Lets each project expose any number of URL groups instead of a fixed pair.
+  detailSections Json         @default("[]")
   envs        EnvVar[]
   docs        Doc[]
   readmes     Readme[]

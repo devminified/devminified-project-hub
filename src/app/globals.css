@@ -194,17 +194,13 @@
    mobile drawer (Sheet), which are different elements. */
 [data-slot="sidebar-inner"],
 [data-mobile="true"][data-slot="sidebar"] {
-  --sidebar: var(--brand-blue);
-  --sidebar-foreground: #ffffff;
-  --sidebar-accent: #ffffff;
-  --sidebar-accent-foreground: var(--brand-blue);
-  --sidebar-border: rgba(255, 255, 255, 0.25);
-  --sidebar-ring: #ffffff;
-  background-image: linear-gradient(
-    to bottom,
-    var(--brand-blue),
-    var(--brand-cyan)
-  );
+  --sidebar: #ffffff;
+  --sidebar-foreground: #334155; /* slate-700 */
+  --sidebar-accent: var(--brand-cyan);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(15, 23, 42, 0.08);
+  --sidebar-ring: var(--brand-cyan);
+  background-image: none;
 }
 
 /* Indeterminate navigation progress bar */
@@ -221,5 +217,38 @@
   }
   100% {
     transform: translateX(260%);
+  }
+}
+
+/* First-load entrance animations (login / welcome screen).
+   Elements start hidden, then fade + rise into place; stagger via an inline
+   `animation-delay` (e.g. style={{ animationDelay: "0.2s" }}). */
+@keyframes dm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dm-animate-in {
+  animation: dm-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Let a <form> that wraps a dialog's body fill the (near full-screen) dialog
+   height, so its footer can pin to the bottom like non-form dialogs. */
+[data-slot="dialog-content"] > form {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-animate-in {
+    animation: none;
   }
 }

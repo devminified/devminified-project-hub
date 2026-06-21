@@ -107,6 +107,24 @@ export async function setUserProjects(
   return { success: true }
 }
 
+/** Approve a pending signup so the user can sign in. */
+export async function approveUser(id: string): Promise<UserActionState> {
+  await requireAdmin()
+  if (!id) return { error: "Missing user." }
+  await prisma.user.update({ where: { id }, data: { status: "APPROVED" } })
+  revalidatePath("/users")
+  return { success: true }
+}
+
+/** Reject a pending signup, removing the request. */
+export async function rejectUser(id: string): Promise<UserActionState> {
+  await requireAdmin()
+  if (!id) return { error: "Missing user." }
+  await prisma.user.delete({ where: { id } })
+  revalidatePath("/users")
+  return { success: true }
+}
+
 export async function deleteUser(id: string): Promise<UserActionState> {
   const me = await requireAdmin()
   if (me.id === id) {

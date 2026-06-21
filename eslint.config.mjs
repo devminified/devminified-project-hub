@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored, generated component library (animate-ui) — keep as-is.
+    "src/components/animate-ui/**",
   ]),
 ]);
 

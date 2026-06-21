@@ -20,18 +20,17 @@ export async function login(
   if (!email || !password) {
     return { error: "Email and password are required." }
   }
-
   const user = await prisma.user.findUnique({ where: { email } })
-
-  // Generic message so we don't reveal whether the email exists.
   const invalid = { error: "Invalid credentials." }
   if (!user) return invalid
-
   const ok = await bcrypt.compare(password, user.passwordHash)
   if (!ok) return invalid
-
-  // Any user provisioned in the database may log in. Manage access by
-  // adding/removing users on the Users page.
+  if (user.status !== "APPROVED") {
+    return {
+      error:
+        "Your account is awaiting admin approval. You'll be able to sign in once it's accepted.",
+    }
+  }
   await createSession({ id: user.id, email: user.email, role: user.role })
   redirect("/")
 }

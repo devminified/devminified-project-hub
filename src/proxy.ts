@@ -17,11 +17,11 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isLoginPage = pathname === "/login"
+  const isPublicPage = pathname === "/login" || pathname === "/signup"
   const authed = await hasValidSession(request)
 
-  // Logged-in users shouldn't see the login page.
-  if (isLoginPage) {
+  // Logged-in users shouldn't see the login or signup pages.
+  if (isPublicPage) {
     if (authed) {
       return NextResponse.redirect(new URL("/", request.url))
     }

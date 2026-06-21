@@ -17,7 +17,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/animate-ui/components/radix/sidebar";
 
 const nav = [
   {
@@ -48,7 +48,7 @@ export function AppSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader className="bg-white px-5 py-5 shadow-sm">
+      <SidebarHeader className="min-h-19 justify-center border-b border-slate-200 bg-white px-5 py-0">
         <Image
           src="/devminified-logo.svg"
           alt="Devminified"
@@ -61,7 +61,7 @@ export function AppSidebar({
 
       <SidebarContent className="px-2 pt-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white font-bold 2xl:text-lg">
+          <SidebarGroupLabel className="px-2 text-sm font-bold uppercase tracking-wider text-slate-500">
             Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -69,17 +69,17 @@ export function AppSidebar({
               {visibleNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
+                    asChild
                     size="lg"
                     isActive={item.match(pathname)}
                     tooltip={item.title}
-                    className="rounded-xl font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15 hover:text-white hover:shadow-md [&_svg]:transition-transform [&_svg]:duration-300 hover:[&_svg]:scale-110 data-active:bg-white/15 data-active:font-semibold data-active:text-white data-active:hover:bg-white/15"
-                    render={
-                      <Link href={item.href}>
-                        <item.icon className="size-5" />
-                        <span>{item.title}</span>
-                      </Link>
-                    }
-                  />
+                    className="h-13 rounded-xl text-base font-semibold"
+                  >
+                    <Link href={item.href}>
+                      <item.icon className="size-6" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -87,22 +87,22 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/25">
+      <SidebarFooter className="border-t border-slate-200">
         <div className="flex items-center gap-3 px-2 py-1.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-[var(--brand-blue)]">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-cyan)] text-xs font-semibold text-white">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
+            <p className="truncate text-sm font-semibold text-slate-800">
               {user.name || "Member"}
             </p>
-            <p className="truncate text-xs text-white/70">{user.email}</p>
+            <p className="truncate text-xs text-slate-500">{user.email}</p>
           </div>
           <form action={logout}>
             <button
               type="submit"
               aria-label="Sign out"
-              className="flex size-8 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white hover:text-[var(--brand-blue)]"
+              className="flex size-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-blue)]"
             >
               <LogOut className="size-4" />
             </button>
