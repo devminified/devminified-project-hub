@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { LibraryFilled, UsersFilled } from "@/components/icons";
+import { LibraryFilled, UsersFilled } from "@/components/svgs";
 import { logout } from "@/app/login/actions";
 import {
   Sidebar,

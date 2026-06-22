@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
-import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/dal"
+import { getProjectOptions, getUsersForAdmin } from "@/lib/users/queries"
 import { SidebarTrigger } from "@/components/animate-ui/components/radix/sidebar"
 import { UsersManager } from "@/components/users-manager"
 
@@ -11,34 +11,11 @@ export default async function UsersPage() {
   if (me.role !== "ADMIN") {
     redirect("/")
   }
-  const [users, allProjects] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        projects: { select: { id: true } },
-      },
-    }),
-    prisma.project.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-  ])
 
-  const rows = users.map((u) => ({
-    id: u.id,
-    email: u.email,
-    name: u.name,
-    role: u.role as "ADMIN" | "USER",
-    status: u.status as "PENDING" | "APPROVED",
-    createdAt: u.createdAt.toISOString().slice(0, 10),
-    projectIds: u.projects.map((p) => p.id),
-  }))
+  const [users, allProjects] = await Promise.all([
+    getUsersForAdmin(),
+    getProjectOptions(),
+  ])
 
   return (
     <div className="min-h-full bg-gradient-to-b from-blue-50/60 via-white to-white">
@@ -48,11 +25,7 @@ export default async function UsersPage() {
       </header>
 
       <main className="px-6 py-8 lg:px-8">
-        <UsersManager
-          users={rows}
-          currentUserId={me.id}
-          allProjects={allProjects}
-        />
+        <UsersManager users={users} currentUserId={me.id} allProjects={allProjects} />
       </main>
     </div>
   )

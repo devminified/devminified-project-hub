@@ -47,6 +47,11 @@ export function parseDetailSections(value: unknown): DetailSection[] {
     .filter((s): s is DetailSection => s !== null)
 }
 
+/** First letter of a project name, for avatar fallbacks. */
+export function projectInitial(name: string): string {
+  return (name.trim()[0] ?? "·").toUpperCase()
+}
+
 /** Normalize an arbitrary `?tab=` value into a known tab key. */
 export function normalizeTab(value: string | string[] | undefined): import("./types").TabKey {
   const tab = Array.isArray(value) ? value[0] : value

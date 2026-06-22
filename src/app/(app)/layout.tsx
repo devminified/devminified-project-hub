@@ -16,7 +16,10 @@ export default async function AppLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={{ email: user.email, name: user.name, role: user.role }} />
-      <SidebarInset>{children}</SidebarInset>
+      {/* min-w-0 lets the content shrink instead of overflowing; overflow-x-clip
+          guards against any wide content (e.g. long ENV values) forcing the page
+          to scroll sideways — `clip` (not `hidden`) keeps sticky headers working. */}
+      <SidebarInset className="min-w-0 overflow-x-clip">{children}</SidebarInset>
     </SidebarProvider>
   )
 }
