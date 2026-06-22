@@ -40,6 +40,7 @@ export async function getProjectList(viewer: Viewer): Promise<ProjectListItem[]>
       status: true,
       description: true,
       tags: true,
+      imageUrl: true,
       updatedAt: true,
     },
   })
@@ -50,6 +51,7 @@ export async function getProjectList(viewer: Viewer): Promise<ProjectListItem[]>
     status: p.status,
     description: p.description,
     tags: p.tags,
+    imageUrl: p.imageUrl,
     updatedAt: toUpdatedAt(p.updatedAt),
   }))
 }
@@ -75,6 +77,7 @@ export async function getProjectSummary(
           description: true,
           status: true,
           tags: true,
+          imageUrl: true,
           detailSections: true,
           updatedAt: true,
           _count: { select: { envs: true, docs: true, readmes: true } },
@@ -88,6 +91,7 @@ export async function getProjectSummary(
         description: p.description,
         status: p.status,
         tags: p.tags,
+        imageUrl: p.imageUrl,
         detailSections: parseDetailSections(p.detailSections),
         updatedAt: toUpdatedAt(p.updatedAt),
         counts: {

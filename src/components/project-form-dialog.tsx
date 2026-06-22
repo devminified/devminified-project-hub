@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState, useTransition } from "react"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { ImagePlus, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -36,6 +36,7 @@ export type ProjectInput = {
   description: string
   status: "Production" | "Staging" | "Development"
   tags: string[]
+  imageUrl: string | null
 }
 
 const textareaClass =
@@ -51,6 +52,7 @@ function ProjectDialog({
   project: ProjectInput | null
 }) {
   const isEdit = Boolean(project)
+  const [image, setImage] = useState<string | null>(project?.imageUrl ?? null)
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     isEdit ? updateProject : createProject,
     {}
@@ -59,6 +61,15 @@ function ProjectDialog({
   useEffect(() => {
     if (state.success) onOpenChange(false)
   }, [state.success, onOpenChange])
+
+  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () =>
+      setImage(typeof reader.result === "string" ? reader.result : null)
+    reader.readAsDataURL(file)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,8 +85,43 @@ function ProjectDialog({
           </DialogHeader>
 
           {isEdit && <input type="hidden" name="id" value={project!.id} />}
+          <input type="hidden" name="imageUrl" value={image ?? ""} />
 
           <div className="space-y-4 py-4">
+            <div className="space-y-1.5">
+              <Label>Image</Label>
+              <div className="flex items-center gap-3">
+                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                  {image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={image} alt="" className="size-full object-cover" />
+                  ) : (
+                    <ImagePlus className="size-5 text-slate-400" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
+                    {image ? "Change image" : "Add image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImage}
+                    />
+                  </label>
+                  {image && (
+                    <button
+                      type="button"
+                      onClick={() => setImage(null)}
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 hover:border-red-200"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="name">Name</Label>
               <Input
@@ -136,7 +182,7 @@ function ProjectDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save changes" : "Create project"}
             </Button>
@@ -153,7 +199,7 @@ export function ProjectCreateButton() {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="h-11 gap-2 rounded-xl bg-[var(--brand-cyan)] px-6 text-base font-semibold text-white shadow-sm shadow-cyan-500/20 transition-colors hover:bg-[var(--brand-cyan)]/90"
+        className="h-11 gap-2 rounded-xl bg-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-sm shadow-indigo-500/20 transition-colors hover:bg-[var(--brand-primary)]/90"
       >
         <Plus className="size-5" />
         New project

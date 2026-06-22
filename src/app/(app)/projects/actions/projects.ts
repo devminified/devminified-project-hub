@@ -37,6 +37,7 @@ export async function createProject(
       description: String(formData.get("description") ?? "").trim(),
       status: asStatus(formData.get("status")),
       tags: parseTags(formData.get("tags")),
+      imageUrl: String(formData.get("imageUrl") ?? "").trim() || null,
     },
   })
 
@@ -61,6 +62,7 @@ export async function updateProject(
       description: String(formData.get("description") ?? "").trim(),
       status: asStatus(formData.get("status")),
       tags: parseTags(formData.get("tags")),
+      imageUrl: String(formData.get("imageUrl") ?? "").trim() || null,
     },
   })
 

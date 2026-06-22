@@ -107,7 +107,7 @@ function DetailItemCard({ label, value }: { label: string; value: string }) {
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-lg text-white",
           linked
-            ? "bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-cyan)]"
+            ? "bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-primary)]"
             : "bg-slate-100 text-slate-500"
         )}
       >
@@ -223,7 +223,7 @@ function DetailsEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit details</DialogTitle>
           <DialogDescription>
@@ -319,7 +319,7 @@ function DetailsEditDialog({
             type="button"
             onClick={handleSave}
             disabled={pending}
-            className="bg-[var(--brand-cyan)] text-white"
+            className="bg-[var(--brand-primary)] text-white"
           >
             {pending ? "Saving…" : "Save details"}
           </Button>

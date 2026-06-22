@@ -14,10 +14,10 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left — brand panel */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[var(--brand-navy)] via-[var(--brand-blue)] to-[var(--brand-cyan)] p-12 lg:flex lg:flex-col lg:justify-between">
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[var(--brand-navy)] via-[var(--brand-blue)] to-[var(--brand-primary)] p-12 lg:flex lg:flex-col lg:justify-between">
         {/* Decorative glow */}
         <div className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-[var(--brand-cyan)]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-[var(--brand-primary)]/20 blur-3xl" />
 
         <div className="relative" />
 

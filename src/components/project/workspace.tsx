@@ -1,71 +1,78 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { FileText, Info, KeyRound, ScrollText } from "lucide-react"
+import Link, { useLinkStatus } from "next/link"
+import { BookOpen, FileText, KeyRound, LayoutList, Loader2 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/animate-ui/components/radix/tabs"
 
 const folders: { key: TabKey; label: string; icon: typeof KeyRound }[] = [
-  { key: "details", label: "Details", icon: Info },
+  { key: "details", label: "Details", icon: LayoutList },
   { key: "envs", label: "ENVs", icon: KeyRound },
   { key: "docs", label: "Documentation", icon: FileText },
-  { key: "readmes", label: "READMEs", icon: ScrollText },
+  { key: "readmes", label: "READMEs", icon: BookOpen },
 ]
 
 /**
- * Animated tab bar (animate-ui) for the project detail page. The bar is
- * controlled by the `?tab=` URL: selecting a tab navigates, so the server still
- * fetches only that tab's data. The active panel is streamed in as `children`.
+ * Underline-style tab bar for the project detail page. Each tab is a <Link>
+ * that sets `?tab=`, so navigating fetches only that tab's data on the server.
+ * The clicked tab shows a spinner while its navigation is pending.
  */
 export function ProjectWorkspace({
   summary,
   active,
-  children,
 }: {
   summary: ProjectSummary
   active: TabKey
-  children: React.ReactNode
 }) {
-  const router = useRouter()
   const counts = summary.counts
 
   return (
-    <div>
-      <Tabs
-        value={active}
-        onValueChange={(value) =>
-          router.push(`/projects/${summary.slug}?tab=${value}`, { scroll: false })
-        }
-      >
-        <TabsList className="h-auto w-full flex-wrap gap-1.5 rounded-xl bg-slate-100 p-1.5">
-          {folders.map((folder) => {
-            const Icon = folder.icon
-            const count = folder.key !== "details" ? counts[folder.key] : null
-            return (
-              <TabsTrigger
-                key={folder.key}
-                value={folder.key}
-                className="gap-2 rounded-lg py-3 text-base font-semibold"
-              >
-                <Icon className="size-5" />
-                <span>{folder.label}</span>
-                {count !== null && (
-                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-semibold text-slate-500 data-[state=active]:bg-cyan-100 data-[state=active]:text-cyan-700">
-                    {count}
-                  </span>
+    <div className="-mb-px flex gap-1 overflow-x-auto">
+      {folders.map((folder) => {
+        const Icon = folder.icon
+        const isActive = active === folder.key
+        const count = folder.key !== "details" ? counts[folder.key] : null
+        return (
+          <Link
+            key={folder.key}
+            href={`/projects/${summary.slug}?tab=${folder.key}`}
+            scroll={false}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors",
+              isActive
+                ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <TabIcon icon={Icon} />
+            {folder.label}
+            {count !== null && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[11px] font-bold",
+                  isActive
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "bg-slate-100 text-slate-500"
                 )}
-              </TabsTrigger>
-            )
-          })}
-        </TabsList>
-      </Tabs>
-
-      <div className="mt-6">{children}</div>
+              >
+                {count}
+              </span>
+            )}
+          </Link>
+        )
+      })}
     </div>
+  )
+}
+
+/** Shows the tab's icon, swapping to a spinner while its <Link> navigation is pending. */
+function TabIcon({ icon: Icon }: { icon: typeof KeyRound }) {
+  const { pending } = useLinkStatus()
+  return pending ? (
+    <Loader2 className="size-4 animate-spin" />
+  ) : (
+    <Icon className="size-4" />
   )
 }

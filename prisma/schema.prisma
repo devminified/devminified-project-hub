@@ -59,6 +59,8 @@ model Project {
   description   String
   status        ProjectStatus @default(Development)
   tags          String[]
+  // Optional project image (data URL or external URL) shown on the card + hero.
+  imageUrl      String?
   // Admin-editable detail sections: an array of { heading, links: [{ label, url }] }.
   // Lets each project expose any number of URL groups instead of a fixed pair.
   detailSections Json         @default("[]")

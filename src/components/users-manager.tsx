@@ -148,7 +148,7 @@ export function UsersManager({
         </div>
         <Button
           onClick={openCreate}
-          className="h-11 gap-2 rounded-xl bg-[var(--brand-cyan)] px-6 text-base font-semibold text-white shadow-sm shadow-cyan-500/20 transition-colors hover:bg-[var(--brand-cyan)]/90"
+          className="h-11 gap-2 rounded-xl bg-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-sm shadow-indigo-500/20 transition-colors hover:bg-[var(--brand-primary)]/90"
         >
           <Plus className="size-5" />
           Add user
@@ -245,7 +245,7 @@ export function UsersManager({
                     className={cn(
                       "rounded-full",
                       user.role === "ADMIN"
-                        ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200"
+                        ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
                         : "bg-slate-100 text-slate-600 ring-1 ring-slate-200"
                     )}
                   >
@@ -450,7 +450,7 @@ function ProjectAccessDialog({
           <Button
             onClick={handleSave}
             disabled={pending}
-            className="bg-[var(--brand-cyan)] text-white"
+            className="bg-[var(--brand-primary)] text-white"
           >
             {pending ? "Saving…" : "Save access"}
           </Button>
@@ -563,7 +563,7 @@ function UserDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending
                 ? "Saving…"

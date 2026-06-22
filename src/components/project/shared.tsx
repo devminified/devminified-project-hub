@@ -48,7 +48,7 @@ export function AddButton({
     <Button
       size="sm"
       onClick={onClick}
-      className="gap-1.5 bg-[var(--brand-cyan)] text-white"
+      className="gap-1.5 bg-[var(--brand-primary)] text-white"
     >
       <Plus className="size-3.5" />
       {label}

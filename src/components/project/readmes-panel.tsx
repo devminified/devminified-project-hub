@@ -270,7 +270,7 @@ function UploadReadmesDialog({
             type="button"
             onClick={handleSubmit}
             disabled={pending || reading || files.length === 0}
-            className="bg-[var(--brand-cyan)] text-white"
+            className="bg-[var(--brand-primary)] text-white"
           >
             {pending
               ? "Adding…"
@@ -345,7 +345,7 @@ function ReadmeDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save" : "Add"}
             </Button>

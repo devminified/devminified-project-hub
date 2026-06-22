@@ -113,7 +113,7 @@ export function EnvsPanel({
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                   isActive
-                    ? "bg-[var(--brand-cyan)] text-white shadow-sm"
+                    ? "bg-[var(--brand-primary)] text-white shadow-sm"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 )}
               >
@@ -270,7 +270,7 @@ function BulkEnvDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Importing…" : "Import variables"}
             </Button>
@@ -356,7 +356,7 @@ function EnvDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save" : "Add"}
             </Button>

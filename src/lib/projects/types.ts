@@ -46,6 +46,7 @@ export type ProjectListItem = {
   status: ProjectStatus
   description: string
   tags: string[]
+  imageUrl: string | null
   updatedAt: string
 }
 
@@ -63,6 +64,7 @@ export type ProjectSummary = {
   description: string
   status: ProjectStatus
   tags: string[]
+  imageUrl: string | null
   detailSections: DetailSection[]
   updatedAt: string
   counts: ProjectCounts

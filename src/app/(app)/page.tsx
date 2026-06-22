@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold text-slate-900">Projects</h1>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
+      <main className="px-6 py-8 lg:px-8">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -45,25 +45,36 @@ export default async function DashboardPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {projects.map((project) => (
               <Link
                 key={project.id}
                 href={`/projects/${project.id}`}
-                className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-cyan)]/50"
+                className="group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]/50"
               >
                 {/* Brand accent bar reveals on hover */}
-                <span className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-[var(--brand-cyan)] transition-transform duration-300 group-hover:scale-x-100" />
+                <span className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-[var(--brand-primary)] transition-transform duration-300 group-hover:scale-x-100" />
 
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-[var(--brand-cyan)] ring-1 ring-cyan-100 transition-colors group-hover:bg-[var(--brand-cyan)] group-hover:text-white">
-                    <MonitorCog className="size-6" />
-                  </div>
+                  {project.imageUrl ? (
+                    <div className="size-11 shrink-0 overflow-hidden rounded-xl ring-1 ring-slate-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={project.imageUrl}
+                        alt={project.name}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[var(--brand-primary)] ring-1 ring-indigo-100 transition-colors group-hover:bg-[var(--brand-primary)] group-hover:text-white">
+                      <MonitorCog className="size-6" />
+                    </div>
+                  )}
                   <StatusBadge status={project.status} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-base font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-[var(--brand-cyan)]">
+                  <h2 className="truncate text-base font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-[var(--brand-primary)]">
                     {project.name}
                   </h2>
                   <p className="mt-1 line-clamp-2 text-sm text-slate-500">
@@ -91,7 +102,7 @@ export default async function DashboardPage() {
                       </span>
                     )}
                   </div>
-                  <ArrowRight className="size-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-[var(--brand-cyan)]" />
+                  <ArrowRight className="size-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-[var(--brand-primary)]" />
                 </div>
               </Link>
             ))}

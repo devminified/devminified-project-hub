@@ -55,7 +55,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #0b58ec;
+  --primary: #1b50d8;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: #edf5fd;
   --secondary-foreground: #02122b;
@@ -66,12 +66,14 @@
   --destructive: #dc3232;
   --border: oklch(0.922 0.01 255);
   --input: oklch(0.922 0.01 255);
-  --ring: #0b58ec;
+  --ring: #1b50d8;
 
   /* Devminified brand tokens */
   --brand-blue: #0b58ec;
   --brand-cyan: #06c7e5;
   --brand-navy: #02122b;
+  /* Primary action / accent color (buttons, sidebar active, links). */
+  --brand-primary: #1b50d8;
   --brand-tint: #edf5fd;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -166,7 +168,7 @@
   margin: auto;
   width: 64px;
   height: 64px;
-  border: 3px solid var(--brand-cyan);
+  border: 3px solid var(--brand-primary);
   border-style: solid solid dotted;
   border-radius: 50%;
   animation: dm-rotation-back 1s linear infinite;
@@ -195,11 +197,12 @@
 [data-slot="sidebar-inner"],
 [data-mobile="true"][data-slot="sidebar"] {
   --sidebar: #ffffff;
-  --sidebar-foreground: #334155; /* slate-700 */
-  --sidebar-accent: var(--brand-cyan);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(15, 23, 42, 0.08);
-  --sidebar-ring: var(--brand-cyan);
+  --sidebar-foreground: #475569; /* slate-600 */
+  /* Active item: soft indigo pill with blue text (mockup style). */
+  --sidebar-accent: #eef2ff;
+  --sidebar-accent-foreground: var(--brand-primary);
+  --sidebar-border: #e8edf5;
+  --sidebar-ring: var(--brand-primary);
   background-image: none;
 }
 
@@ -236,15 +239,6 @@
 
 .dm-animate-in {
   animation: dm-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Let a <form> that wraps a dialog's body fill the (near full-screen) dialog
-   height, so its footer can pin to the bottom like non-form dialogs. */
-[data-slot="dialog-content"] > form {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-  flex-direction: column;
 }
 
 @media (prefers-reduced-motion: reduce) {

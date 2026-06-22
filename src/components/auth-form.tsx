@@ -98,7 +98,7 @@ export function AuthForm() {
           type="submit"
           disabled={pending}
           style={{ animationDelay: "0.6s" }}
-          className="dm-animate-in h-13 w-full rounded-xl bg-[var(--brand-cyan)] text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:opacity-95 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-70"
+          className="dm-animate-in h-13 w-full rounded-xl bg-[var(--brand-primary)] text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:opacity-95 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-70"
         >
           {pending ? "Signing in…" : "Log in"}
         </Button>
@@ -111,7 +111,7 @@ export function AuthForm() {
         Don&apos;t have an account?{" "}
         <Link
           href="/signup"
-          className="font-medium text-[var(--brand-cyan)] hover:underline"
+          className="font-medium text-[var(--brand-primary)] hover:underline"
         >
           Sign up
         </Link>

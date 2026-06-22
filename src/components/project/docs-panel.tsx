@@ -172,7 +172,7 @@ function DocViewDialog({
 }) {
   return (
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         {doc && (
           <>
             <DialogHeader>
@@ -202,7 +202,7 @@ function DocViewDialog({
               </Button>
               <Button
                 onClick={() => downloadText(doc.title, doc.description)}
-                className="gap-1.5 bg-[var(--brand-cyan)] text-white"
+                className="gap-1.5 bg-[var(--brand-primary)] text-white"
               >
                 <Download className="size-4" />
                 Download
@@ -341,7 +341,7 @@ function UploadDocsDialog({
             type="button"
             onClick={handleSubmit}
             disabled={pending || reading || files.length === 0}
-            className="bg-[var(--brand-cyan)] text-white"
+            className="bg-[var(--brand-primary)] text-white"
           >
             {pending
               ? "Adding…"
@@ -416,7 +416,7 @@ function DocDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="bg-[var(--brand-cyan)] text-white"
+              className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save" : "Add"}
             </Button>

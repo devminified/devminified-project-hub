@@ -65,7 +65,7 @@ export function useConfirm() {
             className={cn(
               destructive
                 ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-[var(--brand-cyan)] text-white hover:opacity-90"
+                : "bg-[var(--brand-primary)] text-white hover:opacity-90"
             )}
           >
             {confirmLabel ?? "Confirm"}

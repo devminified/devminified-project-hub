@@ -29,7 +29,7 @@ export function SignupForm() {
         </p>
         <Link
           href="/login"
-          className="mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[var(--brand-cyan)] text-base font-semibold text-white transition-opacity hover:opacity-90"
+          className="mt-8 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[var(--brand-primary)] text-base font-semibold text-white transition-opacity hover:opacity-90"
         >
           Back to sign in
         </Link>
@@ -98,7 +98,7 @@ export function SignupForm() {
         <Button
           type="submit"
           disabled={pending}
-          className="h-13 w-full rounded-xl bg-[var(--brand-cyan)] text-base font-semibold text-white shadow-lg shadow-cyan-500/25 transition-all hover:opacity-95 hover:shadow-xl hover:shadow-cyan-500/30 disabled:opacity-70"
+          className="h-13 w-full rounded-xl bg-[var(--brand-primary)] text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:opacity-95 hover:shadow-xl hover:shadow-indigo-500/30 disabled:opacity-70"
         >
           {pending ? "Creating…" : "Create account"}
         </Button>
@@ -108,7 +108,7 @@ export function SignupForm() {
         Already have an account?{" "}
         <Link
           href="/login"
-          className="font-medium text-[var(--brand-cyan)] hover:underline"
+          className="font-medium text-[var(--brand-primary)] hover:underline"
         >
           Sign in
         </Link>

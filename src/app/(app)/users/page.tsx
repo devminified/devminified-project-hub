@@ -47,7 +47,7 @@ export default async function UsersPage() {
         <h1 className="text-2xl font-semibold text-slate-900">Users</h1>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="px-6 py-8 lg:px-8">
         <UsersManager
           users={rows}
           currentUserId={me.id}
