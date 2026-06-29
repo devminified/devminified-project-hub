@@ -17,10 +17,12 @@ export function ProjectCard({ project }: { project: ProjectListItem }) {
       <div className="flex items-start justify-between gap-3">
         {project.imageUrl ? (
           <div className="size-11 shrink-0 overflow-hidden rounded-xl ring-1 ring-slate-200">
+            {/* Optimized Cloudinary URL (or cacheable route) — never base64. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={project.imageUrl}
               alt={project.name}
+              loading="lazy"
               className="size-full object-cover"
             />
           </div>

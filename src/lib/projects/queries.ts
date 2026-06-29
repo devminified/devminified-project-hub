@@ -3,8 +3,9 @@ import "server-only"
 import { unstable_cache } from "next/cache"
 
 import { prisma } from "@/lib/prisma"
-import { parseDetailSections, toUpdatedAt } from "./utils"
+import { parseDetailSections, projectImageSrc, toUpdatedAt } from "./utils"
 import type {
+  DetailSection,
   DocRecord,
   EnvRecord,
   ProjectListItem,
@@ -45,15 +46,20 @@ export async function getProjectList(viewer: Viewer): Promise<ProjectListItem[]>
     },
   })
 
-  return rows.map((p) => ({
-    id: p.slug,
-    name: p.name,
-    status: p.status,
-    description: p.description,
-    tags: p.tags,
-    imageUrl: p.imageUrl,
-    updatedAt: toUpdatedAt(p.updatedAt),
-  }))
+  return rows.map((p) => {
+    const updatedAt = toUpdatedAt(p.updatedAt)
+    return {
+      id: p.slug,
+      name: p.name,
+      status: p.status,
+      description: p.description,
+      tags: p.tags,
+      // Pre-resolved to a small src (optimized Cloudinary URL, or the cacheable
+      // route for any legacy base64) — never inline base64.
+      imageUrl: projectImageSrc(p.imageUrl, p.slug, updatedAt, 88),
+      updatedAt,
+    }
+  })
 }
 
 /**
@@ -80,7 +86,9 @@ export async function getProjectSummary(
           imageUrl: true,
           detailSections: true,
           updatedAt: true,
-          _count: { select: { envs: true, docs: true, readmes: true } },
+          _count: {
+            select: { envs: true, docs: true, readmes: true, members: true },
+          },
         },
       })
       if (!p) return null
@@ -98,6 +106,7 @@ export async function getProjectSummary(
           envs: p._count.envs,
           docs: p._count.docs,
           readmes: p._count.readmes,
+          members: p._count.members,
         },
       } satisfies ProjectSummary
     }
@@ -150,6 +159,21 @@ export async function getProjectDocs(slug: string): Promise<DocRecord[]> {
       component: d.component,
       updatedAt: toUpdatedAt(d.updatedAt),
     }))
+  })
+}
+
+/**
+ * Admin-only secret sections — the same label/value shape as detailSections,
+ * stored in a separate column and fetched only when the (admin-gated) Secrets
+ * tab is active, so the rest of the page never reads this column.
+ */
+export async function getProjectSecrets(slug: string): Promise<DetailSection[]> {
+  return cachedQuery(slug, "secrets", async () => {
+    const p = await prisma.project.findUnique({
+      where: { slug },
+      select: { secretSections: true },
+    })
+    return p ? parseDetailSections(p.secretSections) : []
   })
 }
 

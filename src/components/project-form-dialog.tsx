@@ -1,13 +1,14 @@
 "use client"
 
 import { useActionState, useEffect, useState, useTransition } from "react"
-import { ImagePlus, Pencil, Plus, Trash2 } from "lucide-react"
+import { ImagePlus, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
   createProject,
   deleteProject,
   updateProject,
+  uploadProjectImage,
   type ActionState,
 } from "@/app/(app)/projects/actions"
 import { Button } from "@/components/ui/button"
@@ -53,6 +54,8 @@ function ProjectDialog({
 }) {
   const isEdit = Boolean(project)
   const [image, setImage] = useState<string | null>(project?.imageUrl ?? null)
+  const [uploading, setUploading] = useState(false)
+  const [imageError, setImageError] = useState<string | null>(null)
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     isEdit ? updateProject : createProject,
     {}
@@ -62,13 +65,21 @@ function ProjectDialog({
     if (state.success) onOpenChange(false)
   }, [state.success, onOpenChange])
 
-  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () =>
-      setImage(typeof reader.result === "string" ? reader.result : null)
-    reader.readAsDataURL(file)
+    setImageError(null)
+    setUploading(true)
+    const formData = new FormData()
+    formData.append("file", file)
+    const res = await uploadProjectImage(formData)
+    setUploading(false)
+    e.target.value = "" // allow re-selecting the same file
+    if (res.error) {
+      setImageError(res.error)
+      return
+    }
+    if (res.url) setImage(res.url)
   }
 
   return (
@@ -92,7 +103,9 @@ function ProjectDialog({
               <Label>Image</Label>
               <div className="flex items-center gap-3">
                 <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                  {image ? (
+                  {uploading ? (
+                    <Loader2 className="size-5 animate-spin text-slate-400" />
+                  ) : image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="" className="size-full object-cover" />
                   ) : (
@@ -100,16 +113,22 @@ function ProjectDialog({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
-                    {image ? "Change image" : "Add image"}
+                  <label
+                    className={cn(
+                      "cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50",
+                      uploading && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    {uploading ? "Uploading…" : image ? "Change image" : "Add image"}
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={uploading}
                       onChange={handleImage}
                     />
                   </label>
-                  {image && (
+                  {image && !uploading && (
                     <button
                       type="button"
                       onClick={() => setImage(null)}
@@ -120,6 +139,7 @@ function ProjectDialog({
                   )}
                 </div>
               </div>
+              {imageError && <p className="text-sm text-red-600">{imageError}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -181,7 +201,7 @@ function ProjectDialog({
             </Button>
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || uploading}
               className="bg-[var(--brand-primary)] text-white"
             >
               {pending ? "Saving…" : isEdit ? "Save changes" : "Create project"}

@@ -1,17 +1,21 @@
 "use client"
 
 import Link, { useLinkStatus } from "next/link"
-import { BookOpen, FileText, KeyRound, LayoutList, Loader2 } from "lucide-react"
+import { BookOpen, FileText, KeyRound, LayoutList, Loader2, Lock } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
 
-const folders: { key: TabKey; label: string; icon: typeof KeyRound }[] = [
+const folders: { key: TabKey; label: string; icon: typeof KeyRound; adminOnly?: boolean }[] = [
   { key: "details", label: "Details", icon: LayoutList },
   { key: "envs", label: "ENVs", icon: KeyRound },
   { key: "docs", label: "Documentation", icon: FileText },
   { key: "readmes", label: "READMEs", icon: BookOpen },
+  { key: "secrets", label: "Secrets", icon: Lock, adminOnly: true },
 ]
+
+/** Tab keys that show a count badge (those backed by a relation count). */
+const COUNTED_TABS = ["envs", "docs", "readmes"] as const
 
 /**
  * Underline-style tab bar for the project detail page. Each tab is a <Link>
@@ -21,18 +25,22 @@ const folders: { key: TabKey; label: string; icon: typeof KeyRound }[] = [
 export function ProjectWorkspace({
   summary,
   active,
+  isAdmin,
 }: {
   summary: ProjectSummary
   active: TabKey
+  isAdmin: boolean
 }) {
   const counts = summary.counts
+  const visibleFolders = folders.filter((f) => !f.adminOnly || isAdmin)
 
   return (
     <div className="-mb-px flex gap-1 overflow-x-auto">
-      {folders.map((folder) => {
+      {visibleFolders.map((folder) => {
         const Icon = folder.icon
         const isActive = active === folder.key
-        const count = folder.key !== "details" ? counts[folder.key] : null
+        const isCounted = (COUNTED_TABS as readonly TabKey[]).includes(folder.key)
+        const count = isCounted ? counts[folder.key as keyof typeof counts] : null
         return (
           <Link
             key={folder.key}

@@ -30,6 +30,9 @@ model User {
   // Admin-created users default to APPROVED.
   status       UserStatus @default(APPROVED)
   projects     Project[]  @relation("ProjectAccess")
+  // Per-project "dev" grants: lets this user edit a specific project's tab
+  // content (details/envs/docs/readmes) without being a global admin.
+  devRoles     ProjectDev[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -64,12 +67,36 @@ model Project {
   // Admin-editable detail sections: an array of { heading, links: [{ label, url }] }.
   // Lets each project expose any number of URL groups instead of a fixed pair.
   detailSections Json         @default("[]")
+  // Admin-only secret sections: same shape as detailSections, but only ever
+  // read/rendered for admins. Kept in its own column so it is never selected
+  // alongside the non-sensitive project summary.
+  secretSections Json         @default("[]")
   envs        EnvVar[]
   docs        Doc[]
   readmes     Readme[]
   members     User[]        @relation("ProjectAccess")
+  // Users granted the per-project "dev" role on this project.
+  devs        ProjectDev[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+/**
+ * A per-project "dev" grant. A row means `user` may edit `project`'s tab content
+ * (details, envs, docs, readmes) — but never secrets or project settings, which
+ * remain admin-only. Additive to the existing ProjectAccess membership.
+ */
+model ProjectDev {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@index([userId])
 }
 
 model EnvVar {

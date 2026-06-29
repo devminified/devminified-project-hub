@@ -41,3 +41,35 @@ export async function requireAdmin() {
   }
   return user
 }
+
+/**
+ * Whether `userId` holds the per-project "dev" role on `projectId`.
+ * Fails closed (returns false) if the lookup errors — e.g. before the
+ * ProjectDev migration is applied — so member views never break.
+ */
+export async function isProjectDev(
+  projectId: string,
+  userId: string
+): Promise<boolean> {
+  try {
+    const row = await prisma.projectDev.findUnique({
+      where: { userId_projectId: { userId, projectId } },
+      select: { id: true },
+    })
+    return Boolean(row)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Gate a non-secret project mutation: allows global admins and users granted
+ * the "dev" role on this specific project. Throws otherwise. Secrets, project
+ * settings, and user management must keep using `requireAdmin`.
+ */
+export async function requireProjectEditor(projectId: string) {
+  const user = await getCurrentUser()
+  if (user.role === "ADMIN") return user
+  if (projectId && (await isProjectDev(projectId, user.id))) return user
+  throw new Error("Forbidden: project dev or admin access required.")
+}

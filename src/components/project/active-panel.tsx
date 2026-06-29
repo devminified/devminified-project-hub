@@ -2,6 +2,7 @@ import {
   getProjectDocs,
   getProjectEnvs,
   getProjectReadmes,
+  getProjectSecrets,
 } from "@/lib/projects/queries"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,6 +10,7 @@ import { DetailsPanel } from "./details-panel"
 import { DocsPanel } from "./docs-panel"
 import { EnvsPanel } from "./envs-panel"
 import { ReadmesPanel } from "./readmes-panel"
+import { SecretsPanel } from "./secrets-panel"
 
 /**
  * Server component that fetches ONLY the active tab's rows and renders the
@@ -19,27 +21,41 @@ export async function ActivePanel({
   active,
   summary,
   isAdmin,
+  canEdit,
 }: {
   active: TabKey
   summary: ProjectSummary
+  /** Global admin — gates the Secrets tab. */
   isAdmin: boolean
+  /** Admin OR project dev — gates editing of non-secret tab content. */
+  canEdit: boolean
 }) {
   if (active === "details") {
-    return <DetailsPanel summary={summary} isAdmin={isAdmin} />
+    return <DetailsPanel summary={summary} canEdit={canEdit} />
+  }
+
+  // Secrets are admin-only. Non-admins should never reach here (the tab is
+  // hidden and the page coerces ?tab=secrets to details), but gate defensively.
+  if (active === "secrets") {
+    if (!isAdmin) {
+      return <DetailsPanel summary={summary} canEdit={canEdit} />
+    }
+    const secrets = await getProjectSecrets(summary.slug)
+    return <SecretsPanel sections={secrets} projectId={summary.id} isAdmin={isAdmin} />
   }
 
   if (active === "envs") {
     const envs = await getProjectEnvs(summary.slug)
-    return <EnvsPanel envs={envs} projectId={summary.id} isAdmin={isAdmin} />
+    return <EnvsPanel envs={envs} projectId={summary.id} canEdit={canEdit} />
   }
 
   if (active === "docs") {
     const docs = await getProjectDocs(summary.slug)
-    return <DocsPanel docs={docs} projectId={summary.id} isAdmin={isAdmin} />
+    return <DocsPanel docs={docs} projectId={summary.id} canEdit={canEdit} />
   }
 
   const readmes = await getProjectReadmes(summary.slug)
-  return <ReadmesPanel readmes={readmes} projectId={summary.id} isAdmin={isAdmin} />
+  return <ReadmesPanel readmes={readmes} projectId={summary.id} canEdit={canEdit} />
 }
 
 /** Skeleton shown while a tab's data streams in. */

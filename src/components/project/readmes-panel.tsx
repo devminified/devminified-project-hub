@@ -45,11 +45,11 @@ import { textareaClass } from "./utils"
 export function ReadmesPanel({
   readmes,
   projectId,
-  isAdmin,
+  canEdit,
 }: {
   readmes: ReadmeRecord[]
   projectId: string
-  isAdmin: boolean
+  canEdit: boolean
 }) {
   const [dialog, setDialog] = useState<{ open: boolean; readme: ReadmeRecord | null }>({
     open: false,
@@ -69,7 +69,7 @@ export function ReadmesPanel({
       title="READMEs"
       description="Markdown files that describe and onboard this project."
       action={
-        isAdmin && (
+        canEdit && (
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={upload.onOpen} className="gap-1.5">
               <Upload className="size-3.5" />
@@ -103,7 +103,7 @@ export function ReadmesPanel({
                   </span>
                   <ComponentBadge component={readme.component} />
                 </div>
-                {isAdmin && (
+                {canEdit && (
                   <RowActions
                     onEdit={() => setDialog({ open: true, readme })}
                     onDelete={async () => {

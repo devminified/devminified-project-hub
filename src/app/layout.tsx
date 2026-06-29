@@ -33,7 +33,12 @@ export default function RootLayout({
       lang="en"
       className={`${generalSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Browser extensions inject attributes (e.g. __processed_…) onto <body>
+          before React hydrates, causing a benign hydration mismatch warning.
+          suppressHydrationWarning silences it for this element only. */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

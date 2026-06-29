@@ -1,10 +1,11 @@
-import { BookOpen, FileText, KeyRound } from "lucide-react"
+import { BookOpen, FileText, KeyRound, Users } from "lucide-react"
 
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
-import { projectInitial } from "@/lib/projects/utils"
+import { projectImageSrc, projectInitial } from "@/lib/projects/utils"
 import { StatusBadge } from "@/components/status-badge"
 import { ProjectActions } from "@/components/project-form-dialog"
 import { ProjectWorkspace } from "@/components/project/workspace"
+import { ManageDevsButton } from "@/components/project/manage-devs-dialog"
 
 /** Project detail hero: avatar/image, name + status + description, actions, stat cards, tabs. */
 export function ProjectHero({
@@ -16,6 +17,14 @@ export function ProjectHero({
   isAdmin: boolean
   active: TabKey
 }) {
+  // Optimized avatar src for display; summary.imageUrl (original) is still
+  // passed to the edit form below so editing preserves the stored value.
+  const heroImageSrc = projectImageSrc(
+    summary.imageUrl,
+    summary.slug,
+    summary.updatedAt,
+    120
+  )
   return (
     <div className="relative overflow-hidden border-b border-slate-200 bg-white">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)]/[0.06] via-blue-500/[0.03] to-transparent" />
@@ -25,10 +34,10 @@ export function ProjectHero({
         <div className="mb-6 flex flex-wrap items-start justify-between gap-5">
           <div className="flex items-center gap-4">
             <div className="flex size-15 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-[var(--brand-primary)] to-[#1338be] text-2xl font-extrabold tracking-tight text-white shadow-lg shadow-indigo-500/30">
-              {summary.imageUrl ? (
+              {heroImageSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={summary.imageUrl}
+                  src={heroImageSrc}
                   alt={summary.name}
                   className="size-full object-cover"
                 />
@@ -51,16 +60,19 @@ export function ProjectHero({
             </div>
           </div>
           {isAdmin && (
-            <ProjectActions
-              project={{
-                id: summary.id,
-                name: summary.name,
-                description: summary.description,
-                status: summary.status,
-                tags: summary.tags,
-                imageUrl: summary.imageUrl,
-              }}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <ManageDevsButton projectId={summary.id} />
+              <ProjectActions
+                project={{
+                  id: summary.id,
+                  name: summary.name,
+                  description: summary.description,
+                  status: summary.status,
+                  tags: summary.tags,
+                  imageUrl: summary.imageUrl,
+                }}
+              />
+            </div>
           )}
         </div>
 
@@ -83,9 +95,15 @@ export function ProjectHero({
             value={summary.counts.readmes}
             label="READMEs"
           />
+          <StatCard
+            icon={Users}
+            tint="bg-emerald-100 text-emerald-700"
+            value={summary.counts.members}
+            label={summary.counts.members === 1 ? "Member" : "Members"}
+          />
         </div>
 
-        <ProjectWorkspace summary={summary} active={active} />
+        <ProjectWorkspace summary={summary} active={active} isAdmin={isAdmin} />
       </div>
     </div>
   )

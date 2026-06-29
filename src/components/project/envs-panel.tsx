@@ -49,11 +49,11 @@ type EnvScopeTab = (typeof envScopeTabs)[number]
 export function EnvsPanel({
   envs,
   projectId,
-  isAdmin,
+  canEdit,
 }: {
   envs: EnvRecord[]
   projectId: string
-  isAdmin: boolean
+  canEdit: boolean
 }) {
   const [dialog, setDialog] = useState<{ open: boolean; env: EnvRecord | null }>({
     open: false,
@@ -86,7 +86,7 @@ export function EnvsPanel({
       title="Environment Variables"
       description="Secrets and configuration scoped per environment."
       action={
-        isAdmin && (
+        canEdit && (
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={bulk.onOpen} className="gap-1.5">
               <ClipboardPaste className="size-3.5" />
@@ -172,7 +172,7 @@ export function EnvsPanel({
               >
                 {env.scope}
               </span>
-              {isAdmin && (
+              {canEdit && (
                 <RowActions
                   onEdit={() => setDialog({ open: true, env })}
                   onDelete={async () => {
