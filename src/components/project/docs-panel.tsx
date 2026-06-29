@@ -45,11 +45,11 @@ import { downloadText, textareaClass } from "./utils"
 export function DocsPanel({
   docs,
   projectId,
-  isAdmin,
+  canEdit,
 }: {
   docs: DocRecord[]
   projectId: string
-  isAdmin: boolean
+  canEdit: boolean
 }) {
   const [dialog, setDialog] = useState<{ open: boolean; doc: DocRecord | null }>({
     open: false,
@@ -70,7 +70,7 @@ export function DocsPanel({
       title="Documentation"
       description="Guides, references, and runbooks for this project."
       action={
-        isAdmin && (
+        canEdit && (
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={upload.onOpen} className="gap-1.5">
               <Upload className="size-3.5" />
@@ -124,7 +124,7 @@ export function DocsPanel({
                 >
                   <Download className="size-3.5" />
                 </button>
-                {isAdmin && (
+                {canEdit && (
                   <RowActions
                     onEdit={() => setDialog({ open: true, doc })}
                     onDelete={async () => {

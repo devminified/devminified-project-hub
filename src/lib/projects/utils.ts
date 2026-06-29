@@ -52,8 +52,44 @@ export function projectInitial(name: string): string {
   return (name.trim()[0] ?? "·").toUpperCase()
 }
 
+/**
+ * Resolve a small, fast image `src` for a project avatar from the stored
+ * `imageUrl`, never returning heavy inline data:
+ * - Cloudinary URL → inject resize/format/quality transforms (optimized + CDN).
+ * - legacy base64 data URL → the cacheable `/projects/[slug]/image` route.
+ * - any other (external) URL → used as-is.
+ * Returns null when there is no image.
+ */
+export function projectImageSrc(
+  imageUrl: string | null,
+  slug: string,
+  version: string,
+  size: number
+): string | null {
+  if (!imageUrl) return null
+
+  if (
+    imageUrl.includes("res.cloudinary.com") &&
+    imageUrl.includes("/image/upload/")
+  ) {
+    const transforms = `c_fill,g_auto,f_auto,q_auto,dpr_2,w_${size},h_${size}`
+    return imageUrl.replace("/image/upload/", `/image/upload/${transforms}/`)
+  }
+
+  if (imageUrl.startsWith("data:")) {
+    return `/projects/${slug}/image?v=${encodeURIComponent(version)}`
+  }
+
+  return imageUrl
+}
+
 /** Normalize an arbitrary `?tab=` value into a known tab key. */
 export function normalizeTab(value: string | string[] | undefined): import("./types").TabKey {
   const tab = Array.isArray(value) ? value[0] : value
-  return tab === "envs" || tab === "docs" || tab === "readmes" ? tab : "details"
+  return tab === "envs" ||
+    tab === "docs" ||
+    tab === "readmes" ||
+    tab === "secrets"
+    ? tab
+    : "details"
 }

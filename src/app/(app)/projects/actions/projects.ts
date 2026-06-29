@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/dal"
+import { requireAdmin, requireProjectEditor } from "@/lib/dal"
 import { projectTag } from "@/lib/projects/queries"
 import type { DetailSection } from "@/lib/projects/types"
 import {
@@ -77,8 +77,8 @@ export async function updateProjectDetails(
   projectId: string,
   sections: DetailSection[]
 ): Promise<ActionState> {
-  await requireAdmin()
   if (!projectId) return { error: "Missing project." }
+  await requireProjectEditor(projectId)
 
   // Trim everything, drop blank items, then drop sections with no heading and no items.
   const clean = sections

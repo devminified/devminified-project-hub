@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/dal"
+import { requireProjectEditor } from "@/lib/dal"
 import {
   asComponent,
   asScope,
@@ -13,8 +13,8 @@ export async function createEnv(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin()
   const projectId = String(formData.get("projectId") ?? "")
+  await requireProjectEditor(projectId)
   const key = String(formData.get("key") ?? "").trim()
   if (!projectId || !key) return { error: "Key is required." }
 
@@ -56,8 +56,8 @@ export async function createEnvsBulk(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin()
   const projectId = String(formData.get("projectId") ?? "")
+  await requireProjectEditor(projectId)
   const scope = asScope(formData.get("scope"))
   const component = asComponent(formData.get("component"))
   const entries = parseEnvBlock(String(formData.get("raw") ?? ""))
@@ -84,10 +84,16 @@ export async function updateEnv(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin()
   const id = String(formData.get("id") ?? "")
   const key = String(formData.get("key") ?? "").trim()
   if (!id || !key) return { error: "Key is required." }
+
+  const existing = await prisma.envVar.findUnique({
+    where: { id },
+    select: { projectId: true },
+  })
+  if (!existing) return { error: "Variable not found." }
+  await requireProjectEditor(existing.projectId)
 
   const env = await prisma.envVar.update({
     where: { id },
@@ -103,7 +109,12 @@ export async function updateEnv(
 }
 
 export async function deleteEnv(id: string): Promise<ActionState> {
-  await requireAdmin()
+  const existing = await prisma.envVar.findUnique({
+    where: { id },
+    select: { projectId: true },
+  })
+  if (!existing) return { error: "Variable not found." }
+  await requireProjectEditor(existing.projectId)
   const env = await prisma.envVar.delete({ where: { id } })
   await revalidateProject(env.projectId)
   return { success: true }

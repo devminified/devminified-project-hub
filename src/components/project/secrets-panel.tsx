@@ -4,8 +4,8 @@ import { useState, useTransition } from "react"
 import { ExternalLink, Globe, Info, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { DetailSection, ProjectSummary } from "@/lib/projects/types"
-import { updateProjectDetails } from "@/app/(app)/projects/actions"
+import type { DetailSection } from "@/lib/projects/types"
+import { updateProjectSecrets } from "@/app/(app)/projects/actions"
 import { useDisclosure } from "@/hooks/use-disclosure"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,22 +20,28 @@ import {
 import { Panel } from "./shared"
 import { isUrl } from "./utils"
 
-export function DetailsPanel({
-  summary,
-  canEdit,
+/**
+ * Admin-only Secrets tab. A faithful copy of the Details tab's section editor,
+ * but backed by the project's separate `secretSections` column. Only ever
+ * rendered for admins (the tab is hidden and the panel router is gated server-side).
+ */
+export function SecretsPanel({
+  projectId,
+  sections,
+  isAdmin,
 }: {
-  summary: ProjectSummary
-  canEdit: boolean
+  projectId: string
+  sections: DetailSection[]
+  isAdmin: boolean
 }) {
   const edit = useDisclosure()
-  const sections = summary.detailSections
 
   return (
     <Panel
-      title="Details"
-      description="Project overview and custom detail sections."
+      title="Secrets"
+      description="Sensitive values and credentials — visible to admins only."
       action={
-        canEdit && (
+        isAdmin && (
           <Button
             size="sm"
             variant="outline"
@@ -49,24 +55,11 @@ export function DetailsPanel({
       }
     >
       <div className="space-y-6">
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">
-            Description
-          </h3>
-          {summary.description ? (
-            <p className="mt-2 text-sm leading-relaxed text-slate-700">
-              {summary.description}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-slate-400">No description yet.</p>
-          )}
-        </div>
-
         {sections.length === 0 ? (
           <p className="text-sm text-slate-400">
-            {canEdit
-              ? "No detail sections yet. Use Edit to add headings (e.g. URLs, Credentials, Links) with any details below them."
-              : "No detail sections yet."}
+            {isAdmin
+              ? "No secret sections yet. Use Edit to add headings (e.g. Credentials, API Keys, Tokens) with any values below them."
+              : "No secret sections yet."}
           </p>
         ) : (
           sections.map((section, si) => (
@@ -79,7 +72,7 @@ export function DetailsPanel({
               ) : (
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {section.items.map((item, ii) => (
-                    <DetailItemCard key={ii} label={item.label} value={item.value} />
+                    <SecretItemCard key={ii} label={item.label} value={item.value} />
                   ))}
                 </div>
               )}
@@ -88,18 +81,18 @@ export function DetailsPanel({
         )}
       </div>
 
-      <DetailsEditDialog
+      <SecretsEditDialog
         key={edit.open ? "edit-open" : "edit-closed"}
         open={edit.open}
         onOpenChange={edit.setOpen}
-        projectId={summary.id}
+        projectId={projectId}
         sections={sections}
       />
     </Panel>
   )
 }
 
-function DetailItemCard({ label, value }: { label: string; value: string }) {
+function SecretItemCard({ label, value }: { label: string; value: string }) {
   const linked = isUrl(value)
   const content = (
     <>
@@ -153,7 +146,7 @@ function DetailItemCard({ label, value }: { label: string; value: string }) {
 
 type EditSection = { heading: string; items: { label: string; value: string }[] }
 
-function DetailsEditDialog({
+function SecretsEditDialog({
   open,
   onOpenChange,
   projectId,
@@ -215,7 +208,7 @@ function DetailsEditDialog({
   function handleSave() {
     setError(null)
     startSave(async () => {
-      const res = await updateProjectDetails(projectId, draft)
+      const res = await updateProjectSecrets(projectId, draft)
       if (res.error) setError(res.error)
       else onOpenChange(false)
     })
@@ -225,9 +218,9 @@ function DetailsEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Edit details</DialogTitle>
+          <DialogTitle>Edit secrets</DialogTitle>
           <DialogDescription>
-            Add any number of headings, each with its own list of details. A value
+            Add any number of headings, each with its own list of secrets. A value
             that starts with http(s):// is shown as a clickable link; anything else
             is shown as text.
           </DialogDescription>
@@ -246,7 +239,7 @@ function DetailsEditDialog({
                 <Input
                   value={section.heading}
                   onChange={(e) => updateSection(si, { heading: e.target.value })}
-                  placeholder="Heading (e.g. URLs, Credentials, Notes)"
+                  placeholder="Heading (e.g. Credentials, API Keys, Tokens)"
                   className="h-9 font-medium"
                 />
                 <button
@@ -321,7 +314,7 @@ function DetailsEditDialog({
             disabled={pending}
             className="bg-[var(--brand-primary)] text-white"
           >
-            {pending ? "Saving…" : "Save details"}
+            {pending ? "Saving…" : "Save secrets"}
           </Button>
         </DialogFooter>
       </DialogContent>

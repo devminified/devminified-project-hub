@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { requireAdmin } from "@/lib/dal"
+import { requireProjectEditor } from "@/lib/dal"
 import type { Component } from "@/lib/projects/types"
 import {
   asComponent,
@@ -13,8 +13,8 @@ export async function createReadme(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin()
   const projectId = String(formData.get("projectId") ?? "")
+  await requireProjectEditor(projectId)
   const title = String(formData.get("title") ?? "").trim()
   if (!projectId || !title) return { error: "Title is required." }
 
@@ -35,7 +35,7 @@ export async function createReadmesBulk(
   files: { title: string; content: string }[],
   component: Component | null = null
 ): Promise<ActionState> {
-  await requireAdmin()
+  await requireProjectEditor(projectId)
   if (!projectId) return { error: "Missing project." }
 
   const clean = files
@@ -59,10 +59,16 @@ export async function updateReadme(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin()
   const id = String(formData.get("id") ?? "")
   const title = String(formData.get("title") ?? "").trim()
   if (!id || !title) return { error: "Title is required." }
+
+  const existing = await prisma.readme.findUnique({
+    where: { id },
+    select: { projectId: true },
+  })
+  if (!existing) return { error: "README not found." }
+  await requireProjectEditor(existing.projectId)
 
   const readme = await prisma.readme.update({
     where: { id },
@@ -77,7 +83,12 @@ export async function updateReadme(
 }
 
 export async function deleteReadme(id: string): Promise<ActionState> {
-  await requireAdmin()
+  const existing = await prisma.readme.findUnique({
+    where: { id },
+    select: { projectId: true },
+  })
+  if (!existing) return { error: "README not found." }
+  await requireProjectEditor(existing.projectId)
   const readme = await prisma.readme.delete({ where: { id } })
   await revalidateProject(readme.projectId)
   return { success: true }
