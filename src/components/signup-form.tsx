@@ -40,10 +40,10 @@ export function SignupForm() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-10">
-        <h1 className="text-5xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
           Create account
         </h1>
-        <p className="mt-3 text-lg text-slate-500">
+        <p className="mt-3 text-sm text-slate-500 sm:text-base lg:text-lg">
           Request access to the Project Hub.
         </p>
       </div>
@@ -51,7 +51,7 @@ export function SignupForm() {
       <form action={formAction} className="space-y-5">
         <Field label="Full name">
           <FieldIcon>
-            <User className="size-5" />
+            <User className="size-4 sm:size-5" />
           </FieldIcon>
           <Input
             type="text"
@@ -63,7 +63,7 @@ export function SignupForm() {
 
         <Field label="Email">
           <FieldIcon>
-            <Mail className="size-5" />
+            <Mail className="size-4 sm:size-5" />
           </FieldIcon>
           <Input
             type="email"
@@ -76,7 +76,7 @@ export function SignupForm() {
 
         <Field label="Password">
           <FieldIcon>
-            <Lock className="size-5" />
+            <Lock className="size-4 sm:size-5" />
           </FieldIcon>
           <Input
             type="password"

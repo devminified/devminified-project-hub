@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { Check, ClipboardPaste, Copy, KeyRound } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { EnvRecord } from "@/lib/projects/types"
+import type { EnvRecord, ProjectTab } from "@/lib/projects/types"
 import {
   createEnv,
   createEnvsBulk,
@@ -35,12 +35,13 @@ import {
 } from "@/components/ui/select"
 import { AddButton, EmptyState, Panel, RowActions } from "./shared"
 import {
-  ComponentBadge,
-  ComponentField,
-  ComponentFilter,
-  matchesComponent,
-  type ComponentTab,
-} from "./component-filter"
+  ALL_TAB,
+  matchesTab,
+  TabBadge,
+  TabField,
+  TabFilter,
+  tabLookup,
+} from "./tab-filter"
 import { scopeStyles, textareaClass } from "./utils"
 
 const envScopeTabs = ["All", "Production", "Preview", "Development"] as const
@@ -48,10 +49,12 @@ type EnvScopeTab = (typeof envScopeTabs)[number]
 
 export function EnvsPanel({
   envs,
+  tabs,
   projectId,
   canEdit,
 }: {
   envs: EnvRecord[]
+  tabs: ProjectTab[]
   projectId: string
   canEdit: boolean
 }) {
@@ -61,24 +64,24 @@ export function EnvsPanel({
   })
   const bulk = useDisclosure()
   const [scope, setScope] = useState<EnvScopeTab>("All")
-  const [comp, setComp] = useState<ComponentTab>("All")
+  const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
   const { copied, copy } = useClipboard()
   const { confirm, dialog: confirmDialog } = useConfirm()
   const [, startDelete] = useTransition()
 
+  const byId = tabLookup(tabs)
   const filtered = envs.filter(
-    (e) =>
-      (scope === "All" || e.scope === scope) && matchesComponent(e.component, comp)
+    (e) => (scope === "All" || e.scope === scope) && matchesTab(e.tabId, activeTab)
   )
 
   const countFor = (tab: EnvScopeTab) =>
     (tab === "All" ? envs : envs.filter((e) => e.scope === tab)).filter((e) =>
-      matchesComponent(e.component, comp)
+      matchesTab(e.tabId, activeTab)
     ).length
 
-  const componentCountFor = (tab: ComponentTab) =>
+  const tabCountFor = (id: string) =>
     envs.filter(
-      (e) => (scope === "All" || e.scope === scope) && matchesComponent(e.component, tab)
+      (e) => (scope === "All" || e.scope === scope) && matchesTab(e.tabId, id)
     ).length
 
   return (
@@ -143,9 +146,17 @@ export function EnvsPanel({
         </Button>
       </div>
 
-      {/* Component tabs */}
+      {/* Tab filter */}
       <div className="mb-4">
-        <ComponentFilter active={comp} onChange={setComp} countFor={componentCountFor} />
+        <TabFilter
+          tabs={tabs}
+          activeId={activeTab}
+          onChange={setActiveTab}
+          countFor={tabCountFor}
+          canEdit={canEdit}
+          projectId={projectId}
+          feature="ENV"
+        />
       </div>
 
       {envs.length === 0 ? (
@@ -163,7 +174,7 @@ export function EnvsPanel({
                 </p>
                 <p className="truncate font-mono text-xs text-slate-400">{env.value}</p>
               </div>
-              <ComponentBadge component={env.component} />
+              <TabBadge tab={env.tabId ? byId.get(env.tabId) : undefined} />
               <span
                 className={cn(
                   "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
@@ -196,12 +207,14 @@ export function EnvsPanel({
         open={dialog.open}
         onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
         env={dialog.env}
+        tabs={tabs}
         projectId={projectId}
       />
       <BulkEnvDialog
         key={bulk.open ? "bulk-open" : "bulk-closed"}
         open={bulk.open}
         onOpenChange={bulk.setOpen}
+        tabs={tabs}
         projectId={projectId}
       />
       {confirmDialog}
@@ -212,10 +225,12 @@ export function EnvsPanel({
 function BulkEnvDialog({
   open,
   onOpenChange,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const { state, formAction, pending } = useActionDialog(createEnvsBulk, () =>
@@ -249,7 +264,7 @@ function BulkEnvDialog({
                 </SelectContent>
               </Select>
             </div>
-            <ComponentField />
+            <TabField tabs={tabs} />
             <div className="space-y-1.5">
               <Label htmlFor="raw">Variables</Label>
               <textarea
@@ -285,11 +300,13 @@ function EnvDialog({
   open,
   onOpenChange,
   env,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   env: EnvRecord | null
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const isEdit = Boolean(env)
@@ -346,7 +363,7 @@ function EnvDialog({
                 </SelectContent>
               </Select>
             </div>
-            <ComponentField defaultValue={env?.component} />
+            <TabField tabs={tabs} defaultValue={env?.tabId} />
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
           </div>
           <DialogFooter>

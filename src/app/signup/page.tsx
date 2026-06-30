@@ -23,13 +23,13 @@ export default function SignupPage() {
 
         <div className="relative max-w-xl">
           <h2
-            className="dm-animate-in text-4xl font-semibold leading-tight tracking-tight text-white xl:text-5xl"
+            className="dm-animate-in text-3xl font-semibold leading-tight tracking-tight text-white lg:text-4xl"
             style={{ animationDelay: "0.05s" }}
           >
             Join the Devminified Project Hub.
           </h2>
           <p
-            className="dm-animate-in mt-5 text-lg leading-relaxed text-blue-100/90"
+            className="dm-animate-in mt-5 text-sm leading-relaxed text-blue-100/90 lg:text-base"
             style={{ animationDelay: "0.18s" }}
           >
             Create an account to request access. An admin reviews each request
@@ -40,7 +40,7 @@ export default function SignupPage() {
             {highlights.map(({ icon: Icon, text }, i) => (
               <li
                 key={text}
-                className="dm-animate-in flex items-center gap-4 text-base text-white"
+                className="dm-animate-in flex items-center gap-4 text-sm text-white lg:text-base"
                 style={{ animationDelay: `${0.3 + i * 0.1}s` }}
               >
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white ring-1 ring-white/20">
@@ -70,7 +70,7 @@ export default function SignupPage() {
             width={260}
             height={68}
             priority
-            className="h-14 w-auto"
+            className="h-8 w-auto sm:h-9 lg:h-10"
           />
         </div>
         <div className="w-full max-w-sm">

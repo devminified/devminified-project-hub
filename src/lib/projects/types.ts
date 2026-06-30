@@ -7,6 +7,16 @@ export type Component = "FRONTEND" | "BACKEND" | "DB"
 export type ProjectStatus = "Production" | "Staging" | "Development"
 export type EnvScope = "Production" | "Preview" | "Development"
 
+/** The three features that each carry their own independent set of tabs. */
+export type TabFeature = "DOC" | "ENV" | "README"
+
+/** A project-specific, editable tab (category) for one feature. */
+export type ProjectTab = {
+  id: string
+  name: string
+  order: number
+}
+
 /**
  * The workspace tabs, also used as the `?tab=` query value. `secrets` is
  * admin-only — it is rendered in the tab bar and accepted by the panel router
@@ -25,14 +35,14 @@ export type EnvRecord = {
   key: string
   value: string
   scope: EnvScope
-  component: Component | null
+  tabId: string | null
 }
 
 export type DocRecord = {
   id: string
   title: string
   description: string
-  component: Component | null
+  tabId: string | null
   updatedAt: string
 }
 
@@ -40,7 +50,7 @@ export type ReadmeRecord = {
   id: string
   title: string
   content: string
-  component: Component | null
+  tabId: string | null
 }
 
 /** Lightweight row for the dashboard list — scalar columns only, no relations. */

@@ -38,11 +38,23 @@ export async function createProject(
       status: asStatus(formData.get("status")),
       tags: parseTags(formData.get("tags")),
       imageUrl: String(formData.get("imageUrl") ?? "").trim() || null,
+      // Seed each feature with the default Frontend/Backend/DB tabs. These are
+      // fully editable per project afterwards.
+      tabs: { create: defaultTabsSeed() },
     },
   })
 
   revalidatePath("/")
   return { success: true }
+}
+
+/** The default tabs every new project starts with, for each feature. */
+function defaultTabsSeed() {
+  const features = ["DOC", "ENV", "README"] as const
+  const names = ["Frontend", "Backend", "DB"]
+  return features.flatMap((feature) =>
+    names.map((name, order) => ({ feature, name, order }))
+  )
 }
 
 export async function updateProject(

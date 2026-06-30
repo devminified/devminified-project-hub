@@ -34,6 +34,12 @@ export function asComponent(value: FormDataEntryValue | null): Component | null 
   return null
 }
 
+/** A project tab id from a form field, or null for "none"/empty. */
+export function asTabId(value: FormDataEntryValue | null): string | null {
+  const s = String(value ?? "").trim()
+  return s && s !== "none" ? s : null
+}
+
 export function parseTags(value: FormDataEntryValue | null): string[] {
   return String(value ?? "")
     .split(",")

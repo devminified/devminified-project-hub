@@ -2,9 +2,8 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireProjectEditor } from "@/lib/dal"
-import type { Component } from "@/lib/projects/types"
 import {
-  asComponent,
+  asTabId,
   revalidateProject,
   type ActionState,
 } from "./helpers"
@@ -23,7 +22,7 @@ export async function createDoc(
       projectId,
       title,
       description: String(formData.get("description") ?? "").trim(),
-      component: asComponent(formData.get("component")),
+      tabId: asTabId(formData.get("tabId")),
     },
   })
   await revalidateProject(projectId)
@@ -33,7 +32,7 @@ export async function createDoc(
 export async function createDocsBulk(
   projectId: string,
   files: { title: string; content: string }[],
-  component: Component | null = null
+  tabId: string | null = null
 ): Promise<ActionState> {
   await requireProjectEditor(projectId)
   if (!projectId) return { error: "Missing project." }
@@ -48,7 +47,7 @@ export async function createDocsBulk(
       projectId,
       title: f.title,
       description: f.content,
-      component,
+      tabId,
     })),
   })
   await revalidateProject(projectId)
@@ -75,7 +74,7 @@ export async function updateDoc(
     data: {
       title,
       description: String(formData.get("description") ?? "").trim(),
-      component: asComponent(formData.get("component")),
+      tabId: asTabId(formData.get("tabId")),
     },
   })
   await revalidateProject(doc.projectId)

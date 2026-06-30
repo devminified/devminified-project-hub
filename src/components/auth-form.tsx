@@ -19,13 +19,13 @@ export function AuthForm() {
     <div className="w-full max-w-md">
       <div className="mb-10">
         <h1
-          className="dm-animate-in text-5xl font-semibold tracking-tight text-slate-900"
+          className="dm-animate-in text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
           style={{ animationDelay: "0.1s" }}
         >
           Welcome back
         </h1>
         <p
-          className="dm-animate-in mt-3 text-lg text-slate-500"
+          className="dm-animate-in mt-3 text-sm text-slate-500 sm:text-base lg:text-lg"
           style={{ animationDelay: "0.2s" }}
         >
           Sign in to access your Project Hub.
@@ -36,7 +36,7 @@ export function AuthForm() {
         <div className="dm-animate-in" style={{ animationDelay: "0.3s" }}>
           <Field label="Email">
             <FieldIcon>
-              <Mail className="size-5" />
+              <Mail className="size-4 sm:size-5" />
             </FieldIcon>
             <Input
               type="email"
@@ -51,7 +51,7 @@ export function AuthForm() {
         <div className="dm-animate-in" style={{ animationDelay: "0.4s" }}>
           <Field label="Password">
             <FieldIcon>
-              <Lock className="size-5" />
+              <Lock className="size-4 sm:size-5" />
             </FieldIcon>
             <Input
               type={showPassword ? "text" : "password"}
@@ -67,9 +67,9 @@ export function AuthForm() {
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeOff className="size-5" />
+                <EyeOff className="size-4 sm:size-5" />
               ) : (
-                <Eye className="size-5" />
+                <Eye className="size-4 sm:size-5" />
               )}
             </button>
           </Field>

@@ -3,8 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { requireProjectEditor } from "@/lib/dal"
 import {
-  asComponent,
   asScope,
+  asTabId,
   revalidateProject,
   type ActionState,
 } from "./helpers"
@@ -24,7 +24,7 @@ export async function createEnv(
       key,
       value: String(formData.get("value") ?? ""),
       scope: asScope(formData.get("scope")),
-      component: asComponent(formData.get("component")),
+      tabId: asTabId(formData.get("tabId")),
     },
   })
   await revalidateProject(projectId)
@@ -59,7 +59,7 @@ export async function createEnvsBulk(
   const projectId = String(formData.get("projectId") ?? "")
   await requireProjectEditor(projectId)
   const scope = asScope(formData.get("scope"))
-  const component = asComponent(formData.get("component"))
+  const tabId = asTabId(formData.get("tabId"))
   const entries = parseEnvBlock(String(formData.get("raw") ?? ""))
 
   if (!projectId) return { error: "Missing project." }
@@ -73,7 +73,7 @@ export async function createEnvsBulk(
       key: e.key,
       value: e.value,
       scope,
-      component,
+      tabId,
     })),
   })
   await revalidateProject(projectId)
@@ -101,7 +101,7 @@ export async function updateEnv(
       key,
       value: String(formData.get("value") ?? ""),
       scope: asScope(formData.get("scope")),
-      component: asComponent(formData.get("component")),
+      tabId: asTabId(formData.get("tabId")),
     },
   })
   await revalidateProject(env.projectId)

@@ -55,6 +55,34 @@ enum Component {
   DB
 }
 
+// Which feature a project's tab belongs to. Docs, Envs, and READMEs each have
+// their own independent, editable set of tabs (categories) per project.
+enum TabFeature {
+  DOC
+  ENV
+  README
+}
+
+/**
+ * A project-specific, editable tab (category) for one feature. Replaces the
+ * fixed `Component` enum: each project seeds Frontend/Backend/DB per feature
+ * and admins / project devs can add, rename, or remove tabs from there.
+ */
+model ProjectTab {
+  id        String     @id @default(cuid())
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  feature   TabFeature
+  name      String
+  order     Int        @default(0)
+  docs      Doc[]
+  envs      EnvVar[]
+  readmes   Readme[]
+  createdAt DateTime   @default(now())
+
+  @@index([projectId, feature])
+}
+
 model Project {
   id            String        @id @default(cuid())
   slug          String        @unique
@@ -74,6 +102,8 @@ model Project {
   envs        EnvVar[]
   docs        Doc[]
   readmes     Readme[]
+  // Per-project, per-feature editable tabs (categories).
+  tabs        ProjectTab[]
   members     User[]        @relation("ProjectAccess")
   // Users granted the per-project "dev" role on this project.
   devs        ProjectDev[]
@@ -100,37 +130,49 @@ model ProjectDev {
 }
 
 model EnvVar {
-  id        String     @id @default(cuid())
+  id        String      @id @default(cuid())
   key       String
   value     String
-  scope     EnvScope   @default(Development)
+  scope     EnvScope    @default(Development)
+  // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
   component Component?
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tab       ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)
+  tabId     String?
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
 
   @@index([projectId])
+  @@index([tabId])
 }
 
 model Doc {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
   title       String
   description String
+  // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
   component   Component?
-  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tab         ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)
+  tabId       String?
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([projectId])
+  @@index([tabId])
 }
 
 model Readme {
-  id        String     @id @default(cuid())
+  id        String      @id @default(cuid())
   title     String
   content   String
+  // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
   component Component?
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tab       ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)
+  tabId     String?
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
 
   @@index([projectId])
+  @@index([tabId])
 }

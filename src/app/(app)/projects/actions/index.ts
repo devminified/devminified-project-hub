@@ -17,6 +17,7 @@ export {
   updateReadme,
   deleteReadme,
 } from "./readmes"
+export { createTab, renameTab, deleteTab } from "./tabs"
 export { updateProjectSecrets } from "./secrets"
 export { listProjectDevs, setProjectDev, type DevCandidate } from "./devs"
 export { uploadProjectImage, type UploadResult } from "./images"

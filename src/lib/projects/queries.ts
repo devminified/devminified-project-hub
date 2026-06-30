@@ -10,7 +10,9 @@ import type {
   EnvRecord,
   ProjectListItem,
   ProjectSummary,
+  ProjectTab,
   ReadmeRecord,
+  TabFeature,
 } from "./types"
 
 type Viewer = { id: string; role: string }
@@ -141,8 +143,25 @@ export async function getProjectEnvs(slug: string): Promise<EnvRecord[]> {
       key: e.key,
       value: e.value,
       scope: e.scope,
-      component: e.component,
+      tabId: e.tabId,
     }))
+  })
+}
+
+/**
+ * A project's editable tabs for one feature (Docs / Envs / READMEs), ordered.
+ * Cached behind the per-project tag like the other relation reads.
+ */
+export async function getProjectTabs(
+  slug: string,
+  feature: TabFeature
+): Promise<ProjectTab[]> {
+  return cachedQuery(slug, `tabs:${feature}`, async () => {
+    const rows = await prisma.projectTab.findMany({
+      where: { project: { slug }, feature },
+      orderBy: { order: "asc" },
+    })
+    return rows.map((t) => ({ id: t.id, name: t.name, order: t.order }))
   })
 }
 
@@ -156,7 +175,7 @@ export async function getProjectDocs(slug: string): Promise<DocRecord[]> {
       id: d.id,
       title: d.title,
       description: d.description,
-      component: d.component,
+      tabId: d.tabId,
       updatedAt: toUpdatedAt(d.updatedAt),
     }))
   })
@@ -187,7 +206,7 @@ export async function getProjectReadmes(slug: string): Promise<ReadmeRecord[]> {
       id: r.id,
       title: r.title,
       content: r.content,
-      component: r.component,
+      tabId: r.tabId,
     }))
   })
 }

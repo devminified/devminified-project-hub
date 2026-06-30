@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { ScrollText, Upload } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import type { Component, ReadmeRecord } from "@/lib/projects/types"
+import type { ProjectTab, ReadmeRecord } from "@/lib/projects/types"
 import {
   createReadme,
   createReadmesBulk,
@@ -34,20 +34,23 @@ import {
 } from "@/components/ui/select"
 import { AddButton, EmptyState, Panel, RowActions } from "./shared"
 import {
-  ComponentBadge,
-  ComponentField,
-  ComponentFilter,
-  matchesComponent,
-  type ComponentTab,
-} from "./component-filter"
+  ALL_TAB,
+  matchesTab,
+  TabBadge,
+  TabField,
+  TabFilter,
+  tabLookup,
+} from "./tab-filter"
 import { textareaClass } from "./utils"
 
 export function ReadmesPanel({
   readmes,
+  tabs,
   projectId,
   canEdit,
 }: {
   readmes: ReadmeRecord[]
+  tabs: ProjectTab[]
   projectId: string
   canEdit: boolean
 }) {
@@ -56,13 +59,14 @@ export function ReadmesPanel({
     readme: null,
   })
   const upload = useDisclosure()
-  const [comp, setComp] = useState<ComponentTab>("All")
+  const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
   const { confirm, dialog: confirmDialog } = useConfirm()
   const [, startDelete] = useTransition()
 
-  const filtered = readmes.filter((r) => matchesComponent(r.component, comp))
-  const componentCountFor = (tab: ComponentTab) =>
-    readmes.filter((r) => matchesComponent(r.component, tab)).length
+  const byId = tabLookup(tabs)
+  const filtered = readmes.filter((r) => matchesTab(r.tabId, activeTab))
+  const tabCountFor = (id: string) =>
+    readmes.filter((r) => matchesTab(r.tabId, id)).length
 
   return (
     <Panel
@@ -84,7 +88,15 @@ export function ReadmesPanel({
       }
     >
       <div className="mb-4">
-        <ComponentFilter active={comp} onChange={setComp} countFor={componentCountFor} />
+        <TabFilter
+          tabs={tabs}
+          activeId={activeTab}
+          onChange={setActiveTab}
+          countFor={tabCountFor}
+          canEdit={canEdit}
+          projectId={projectId}
+          feature="README"
+        />
       </div>
 
       {readmes.length === 0 ? (
@@ -101,7 +113,7 @@ export function ReadmesPanel({
                   <span className="font-mono text-xs font-medium text-slate-700">
                     {readme.title}
                   </span>
-                  <ComponentBadge component={readme.component} />
+                  <TabBadge tab={readme.tabId ? byId.get(readme.tabId) : undefined} />
                 </div>
                 {canEdit && (
                   <RowActions
@@ -131,12 +143,14 @@ export function ReadmesPanel({
         open={dialog.open}
         onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
         readme={dialog.readme}
+        tabs={tabs}
         projectId={projectId}
       />
       <UploadReadmesDialog
         key={upload.open ? "upload-open" : "upload-closed"}
         open={upload.open}
         onOpenChange={upload.setOpen}
+        tabs={tabs}
         projectId={projectId}
       />
       {confirmDialog}
@@ -147,14 +161,16 @@ export function ReadmesPanel({
 function UploadReadmesDialog({
   open,
   onOpenChange,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const [files, setFiles] = useState<{ title: string; content: string }[]>([])
-  const [component, setComponent] = useState<string>("none")
+  const [tabId, setTabId] = useState<string>("none")
   const [error, setError] = useState<string | null>(null)
   const [reading, setReading] = useState(false)
   const [pending, startUpload] = useTransition()
@@ -187,9 +203,9 @@ function UploadReadmesDialog({
       setError("Select one or more files first.")
       return
     }
-    const comp = component === "none" ? null : (component as Component)
+    const tab = tabId === "none" ? null : tabId
     startUpload(async () => {
-      const res = await createReadmesBulk(projectId, files, comp)
+      const res = await createReadmesBulk(projectId, files, tab)
       if (res.error) setError(res.error)
       else onOpenChange(false)
     })
@@ -208,16 +224,18 @@ function UploadReadmesDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <Label>Component</Label>
-            <Select value={component} onValueChange={(v) => setComponent(v ?? "none")}>
+            <Label>Tab</Label>
+            <Select value={tabId} onValueChange={(v) => setTabId(v ?? "none")}>
               <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                <SelectItem value="FRONTEND">Frontend</SelectItem>
-                <SelectItem value="BACKEND">Backend</SelectItem>
-                <SelectItem value="DB">DB</SelectItem>
+                {tabs.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -286,11 +304,13 @@ function ReadmeDialog({
   open,
   onOpenChange,
   readme,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   readme: ReadmeRecord | null
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const isEdit = Boolean(readme)
@@ -335,7 +355,7 @@ function ReadmeDialog({
                 className={cn(textareaClass, "font-mono")}
               />
             </div>
-            <ComponentField defaultValue={readme?.component} />
+            <TabField tabs={tabs} defaultValue={readme?.tabId} />
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
           </div>
           <DialogFooter>

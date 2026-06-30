@@ -3,6 +3,7 @@ import {
   getProjectEnvs,
   getProjectReadmes,
   getProjectSecrets,
+  getProjectTabs,
 } from "@/lib/projects/queries"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -45,17 +46,28 @@ export async function ActivePanel({
   }
 
   if (active === "envs") {
-    const envs = await getProjectEnvs(summary.slug)
-    return <EnvsPanel envs={envs} projectId={summary.id} canEdit={canEdit} />
+    const [envs, tabs] = await Promise.all([
+      getProjectEnvs(summary.slug),
+      getProjectTabs(summary.slug, "ENV"),
+    ])
+    return <EnvsPanel envs={envs} tabs={tabs} projectId={summary.id} canEdit={canEdit} />
   }
 
   if (active === "docs") {
-    const docs = await getProjectDocs(summary.slug)
-    return <DocsPanel docs={docs} projectId={summary.id} canEdit={canEdit} />
+    const [docs, tabs] = await Promise.all([
+      getProjectDocs(summary.slug),
+      getProjectTabs(summary.slug, "DOC"),
+    ])
+    return <DocsPanel docs={docs} tabs={tabs} projectId={summary.id} canEdit={canEdit} />
   }
 
-  const readmes = await getProjectReadmes(summary.slug)
-  return <ReadmesPanel readmes={readmes} projectId={summary.id} canEdit={canEdit} />
+  const [readmes, tabs] = await Promise.all([
+    getProjectReadmes(summary.slug),
+    getProjectTabs(summary.slug, "README"),
+  ])
+  return (
+    <ReadmesPanel readmes={readmes} tabs={tabs} projectId={summary.id} canEdit={canEdit} />
+  )
 }
 
 /** Skeleton shown while a tab's data streams in. */

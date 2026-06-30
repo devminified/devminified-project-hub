@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { Download, FileText, Upload } from "lucide-react"
 
-import type { Component, DocRecord } from "@/lib/projects/types"
+import type { DocRecord, ProjectTab } from "@/lib/projects/types"
 import {
   createDoc,
   createDocsBulk,
@@ -33,21 +33,23 @@ import {
 } from "@/components/ui/select"
 import { AddButton, EmptyState, Panel, RowActions } from "./shared"
 import {
-  ComponentBadge,
-  ComponentField,
-  ComponentFilter,
-  componentLabel,
-  matchesComponent,
-  type ComponentTab,
-} from "./component-filter"
+  ALL_TAB,
+  matchesTab,
+  TabBadge,
+  TabField,
+  TabFilter,
+  tabLookup,
+} from "./tab-filter"
 import { downloadText, textareaClass } from "./utils"
 
 export function DocsPanel({
   docs,
+  tabs,
   projectId,
   canEdit,
 }: {
   docs: DocRecord[]
+  tabs: ProjectTab[]
   projectId: string
   canEdit: boolean
 }) {
@@ -57,13 +59,14 @@ export function DocsPanel({
   })
   const upload = useDisclosure()
   const [view, setView] = useState<DocRecord | null>(null)
-  const [comp, setComp] = useState<ComponentTab>("All")
+  const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
   const { confirm, dialog: confirmDialog } = useConfirm()
   const [, startDelete] = useTransition()
 
-  const filtered = docs.filter((d) => matchesComponent(d.component, comp))
-  const componentCountFor = (tab: ComponentTab) =>
-    docs.filter((d) => matchesComponent(d.component, tab)).length
+  const byId = tabLookup(tabs)
+  const filtered = docs.filter((d) => matchesTab(d.tabId, activeTab))
+  const tabCountFor = (id: string) =>
+    docs.filter((d) => matchesTab(d.tabId, id)).length
 
   return (
     <Panel
@@ -82,13 +85,21 @@ export function DocsPanel({
       }
     >
       <div className="mb-4">
-        <ComponentFilter active={comp} onChange={setComp} countFor={componentCountFor} />
+        <TabFilter
+          tabs={tabs}
+          activeId={activeTab}
+          onChange={setActiveTab}
+          countFor={tabCountFor}
+          canEdit={canEdit}
+          projectId={projectId}
+          feature="DOC"
+        />
       </div>
 
       {docs.length === 0 ? (
         <EmptyState message="No documentation yet." />
       ) : filtered.length === 0 ? (
-        <EmptyState message={`No ${componentLabel[comp as "FRONTEND"] ?? "matching"} docs.`} />
+        <EmptyState message="No matching docs." />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {filtered.map((doc) => (
@@ -109,7 +120,7 @@ export function DocsPanel({
                     <p className="truncate text-sm font-medium text-slate-800 group-hover:text-[var(--brand-blue)]">
                       {doc.title}
                     </p>
-                    <ComponentBadge component={doc.component} />
+                    <TabBadge tab={doc.tabId ? byId.get(doc.tabId) : undefined} />
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{doc.description}</p>
                   <p className="mt-2 text-xs text-slate-400">Updated {doc.updatedAt}</p>
@@ -149,15 +160,21 @@ export function DocsPanel({
         open={dialog.open}
         onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
         doc={dialog.doc}
+        tabs={tabs}
         projectId={projectId}
       />
       <UploadDocsDialog
         key={upload.open ? "upload-open" : "upload-closed"}
         open={upload.open}
         onOpenChange={upload.setOpen}
+        tabs={tabs}
         projectId={projectId}
       />
-      <DocViewDialog doc={view} onClose={() => setView(null)} />
+      <DocViewDialog
+        doc={view}
+        tab={view?.tabId ? byId.get(view.tabId) : undefined}
+        onClose={() => setView(null)}
+      />
       {confirmDialog}
     </Panel>
   )
@@ -165,9 +182,11 @@ export function DocsPanel({
 
 function DocViewDialog({
   doc,
+  tab,
   onClose,
 }: {
   doc: DocRecord | null
+  tab: ProjectTab | undefined
   onClose: () => void
 }) {
   return (
@@ -179,7 +198,7 @@ function DocViewDialog({
               <DialogTitle className="flex items-center gap-2 text-lg">
                 <FileText className="size-5 text-blue-500" />
                 {doc.title}
-                <ComponentBadge component={doc.component} />
+                <TabBadge tab={tab} />
               </DialogTitle>
               <DialogDescription>Updated {doc.updatedAt}</DialogDescription>
             </DialogHeader>
@@ -218,14 +237,16 @@ function DocViewDialog({
 function UploadDocsDialog({
   open,
   onOpenChange,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const [files, setFiles] = useState<{ title: string; content: string }[]>([])
-  const [component, setComponent] = useState<string>("none")
+  const [tabId, setTabId] = useState<string>("none")
   const [error, setError] = useState<string | null>(null)
   const [reading, setReading] = useState(false)
   const [pending, startUpload] = useTransition()
@@ -258,9 +279,9 @@ function UploadDocsDialog({
       setError("Select one or more files first.")
       return
     }
-    const comp = component === "none" ? null : (component as Component)
+    const tab = tabId === "none" ? null : tabId
     startUpload(async () => {
-      const res = await createDocsBulk(projectId, files, comp)
+      const res = await createDocsBulk(projectId, files, tab)
       if (res.error) setError(res.error)
       else onOpenChange(false)
     })
@@ -279,16 +300,18 @@ function UploadDocsDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
-            <Label>Component</Label>
-            <Select value={component} onValueChange={(v) => setComponent(v ?? "none")}>
+            <Label>Tab</Label>
+            <Select value={tabId} onValueChange={(v) => setTabId(v ?? "none")}>
               <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                <SelectItem value="FRONTEND">Frontend</SelectItem>
-                <SelectItem value="BACKEND">Backend</SelectItem>
-                <SelectItem value="DB">DB</SelectItem>
+                {tabs.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -357,11 +380,13 @@ function DocDialog({
   open,
   onOpenChange,
   doc,
+  tabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   doc: DocRecord | null
+  tabs: ProjectTab[]
   projectId: string
 }) {
   const isEdit = Boolean(doc)
@@ -406,7 +431,7 @@ function DocDialog({
                 className={`${textareaClass} min-h-32`}
               />
             </div>
-            <ComponentField defaultValue={doc?.component} />
+            <TabField tabs={tabs} defaultValue={doc?.tabId} />
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
           </div>
           <DialogFooter>
