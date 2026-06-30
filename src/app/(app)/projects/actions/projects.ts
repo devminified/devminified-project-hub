@@ -50,11 +50,20 @@ export async function createProject(
 
 /** The default tabs every new project starts with, for each feature. */
 function defaultTabsSeed() {
-  const features = ["DOC", "ENV", "README"] as const
-  const names = ["Frontend", "Backend", "DB"]
-  return features.flatMap((feature) =>
-    names.map((name, order) => ({ feature, name, order }))
-  )
+  const componentFeatures = ["DOC", "ENV", "README"] as const
+  const componentNames = ["Frontend", "Backend", "DB"]
+  const scopeNames = ["Production", "Preview", "Development"]
+  return [
+    ...componentFeatures.flatMap((feature) =>
+      componentNames.map((name, order) => ({ feature, name, order }))
+    ),
+    // The env scope row (Prod / Preview / Dev), also editable per project.
+    ...scopeNames.map((name, order) => ({
+      feature: "ENV_SCOPE" as const,
+      name,
+      order,
+    })),
+  ]
 }
 
 export async function updateProject(

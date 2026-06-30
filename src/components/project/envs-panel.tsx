@@ -26,13 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { AddButton, EmptyState, Panel, RowActions } from "./shared"
 import {
   ALL_TAB,
@@ -42,19 +35,18 @@ import {
   TabFilter,
   tabLookup,
 } from "./tab-filter"
-import { scopeStyles, textareaClass } from "./utils"
-
-const envScopeTabs = ["All", "Production", "Preview", "Development"] as const
-type EnvScopeTab = (typeof envScopeTabs)[number]
+import { textareaClass } from "./utils"
 
 export function EnvsPanel({
   envs,
   tabs,
+  scopeTabs,
   projectId,
   canEdit,
 }: {
   envs: EnvRecord[]
   tabs: ProjectTab[]
+  scopeTabs: ProjectTab[]
   projectId: string
   canEdit: boolean
 }) {
@@ -63,26 +55,30 @@ export function EnvsPanel({
     env: null,
   })
   const bulk = useDisclosure()
-  const [scope, setScope] = useState<EnvScopeTab>("All")
+  const [activeScope, setActiveScope] = useState<string>(ALL_TAB)
   const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
   const { copied, copy } = useClipboard()
   const { confirm, dialog: confirmDialog } = useConfirm()
   const [, startDelete] = useTransition()
 
   const byId = tabLookup(tabs)
+  const scopeById = tabLookup(scopeTabs)
   const filtered = envs.filter(
-    (e) => (scope === "All" || e.scope === scope) && matchesTab(e.tabId, activeTab)
+    (e) => matchesTab(e.scopeTabId, activeScope) && matchesTab(e.tabId, activeTab)
   )
 
-  const countFor = (tab: EnvScopeTab) =>
-    (tab === "All" ? envs : envs.filter((e) => e.scope === tab)).filter((e) =>
-      matchesTab(e.tabId, activeTab)
+  const scopeCountFor = (id: string) =>
+    envs.filter(
+      (e) => matchesTab(e.scopeTabId, id) && matchesTab(e.tabId, activeTab)
     ).length
 
   const tabCountFor = (id: string) =>
     envs.filter(
-      (e) => (scope === "All" || e.scope === scope) && matchesTab(e.tabId, id)
+      (e) => matchesTab(e.scopeTabId, activeScope) && matchesTab(e.tabId, id)
     ).length
+
+  const activeScopeName =
+    activeScope === ALL_TAB ? "all" : scopeById.get(activeScope)?.name ?? "all"
 
   return (
     <Panel
@@ -105,34 +101,16 @@ export function EnvsPanel({
     >
       {/* Scope tabs + copy */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {envScopeTabs.map((tab) => {
-            const isActive = scope === tab
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setScope(tab)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                  isActive
-                    ? "bg-[var(--brand-primary)] text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                )}
-              >
-                {tab}
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 text-[10px] font-semibold",
-                    isActive ? "bg-white/25 text-white" : "bg-white text-slate-500"
-                  )}
-                >
-                  {countFor(tab)}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <TabFilter
+          tabs={scopeTabs}
+          activeId={activeScope}
+          onChange={setActiveScope}
+          countFor={scopeCountFor}
+          canEdit={canEdit}
+          projectId={projectId}
+          feature="ENV_SCOPE"
+          activeClassName="bg-[var(--brand-primary)] text-white shadow-sm"
+        />
 
         <Button
           size="sm"
@@ -142,11 +120,11 @@ export function EnvsPanel({
           className={cn("gap-1.5", copied && "border-emerald-300 text-emerald-700")}
         >
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-          {copied ? "Copied" : `Copy ${scope === "All" ? "all" : scope}`}
+          {copied ? "Copied" : `Copy ${activeScopeName}`}
         </Button>
       </div>
 
-      {/* Tab filter */}
+      {/* Component tab filter */}
       <div className="mb-4">
         <TabFilter
           tabs={tabs}
@@ -162,7 +140,7 @@ export function EnvsPanel({
       {envs.length === 0 ? (
         <EmptyState message="No environment variables yet." />
       ) : filtered.length === 0 ? (
-        <EmptyState message={`No ${scope.toLowerCase()} variables.`} />
+        <EmptyState message="No matching variables." />
       ) : (
         <ul className="divide-y divide-slate-100">
           {filtered.map((env) => (
@@ -175,14 +153,7 @@ export function EnvsPanel({
                 <p className="truncate font-mono text-xs text-slate-400">{env.value}</p>
               </div>
               <TabBadge tab={env.tabId ? byId.get(env.tabId) : undefined} />
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
-                  scopeStyles[env.scope] ?? "bg-slate-50 text-slate-600 ring-slate-200"
-                )}
-              >
-                {env.scope}
-              </span>
+              <TabBadge tab={env.scopeTabId ? scopeById.get(env.scopeTabId) : undefined} />
               {canEdit && (
                 <RowActions
                   onEdit={() => setDialog({ open: true, env })}
@@ -208,6 +179,7 @@ export function EnvsPanel({
         onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
         env={dialog.env}
         tabs={tabs}
+        scopeTabs={scopeTabs}
         projectId={projectId}
       />
       <BulkEnvDialog
@@ -215,6 +187,7 @@ export function EnvsPanel({
         open={bulk.open}
         onOpenChange={bulk.setOpen}
         tabs={tabs}
+        scopeTabs={scopeTabs}
         projectId={projectId}
       />
       {confirmDialog}
@@ -226,11 +199,13 @@ function BulkEnvDialog({
   open,
   onOpenChange,
   tabs,
+  scopeTabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   tabs: ProjectTab[]
+  scopeTabs: ProjectTab[]
   projectId: string
 }) {
   const { state, formAction, pending } = useActionDialog(createEnvsBulk, () =>
@@ -251,19 +226,7 @@ function BulkEnvDialog({
           </DialogHeader>
           <input type="hidden" name="projectId" value={projectId} />
           <div className="space-y-4 py-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="scope">Scope</Label>
-              <Select name="scope" defaultValue="Development">
-                <SelectTrigger id="scope" className="h-10 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Production">Production</SelectItem>
-                  <SelectItem value="Preview">Preview</SelectItem>
-                  <SelectItem value="Development">Development</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <TabField tabs={scopeTabs} name="scopeTabId" label="Scope" />
             <TabField tabs={tabs} />
             <div className="space-y-1.5">
               <Label htmlFor="raw">Variables</Label>
@@ -301,12 +264,14 @@ function EnvDialog({
   onOpenChange,
   env,
   tabs,
+  scopeTabs,
   projectId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   env: EnvRecord | null
   tabs: ProjectTab[]
+  scopeTabs: ProjectTab[]
   projectId: string
 }) {
   const isEdit = Boolean(env)
@@ -350,19 +315,12 @@ function EnvDialog({
                 className="h-10 font-mono"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="scope">Scope</Label>
-              <Select name="scope" defaultValue={env?.scope ?? "Development"}>
-                <SelectTrigger id="scope" className="h-10 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Production">Production</SelectItem>
-                  <SelectItem value="Preview">Preview</SelectItem>
-                  <SelectItem value="Development">Development</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <TabField
+              tabs={scopeTabs}
+              name="scopeTabId"
+              label="Scope"
+              defaultValue={env?.scopeTabId}
+            />
             <TabField tabs={tabs} defaultValue={env?.tabId} />
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
           </div>

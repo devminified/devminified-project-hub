@@ -60,6 +60,7 @@ enum Component {
 enum TabFeature {
   DOC
   ENV
+  ENV_SCOPE
   README
 }
 
@@ -76,7 +77,9 @@ model ProjectTab {
   name      String
   order     Int        @default(0)
   docs      Doc[]
-  envs      EnvVar[]
+  // Env vars use ProjectTab twice: once for the component tab, once for scope.
+  envs      EnvVar[]   @relation("EnvTab")
+  envScopes EnvVar[]   @relation("EnvScopeTab")
   readmes   Readme[]
   createdAt DateTime   @default(now())
 
@@ -133,16 +136,20 @@ model EnvVar {
   id        String      @id @default(cuid())
   key       String
   value     String
-  scope     EnvScope    @default(Development)
+  // Legacy fixed scope, superseded by `scopeTab`. Kept for backwards-compat.
+  scope      EnvScope    @default(Development)
   // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
-  component Component?
-  tab       ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)
-  tabId     String?
-  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String
+  component  Component?
+  tab        ProjectTab? @relation("EnvTab", fields: [tabId], references: [id], onDelete: SetNull)
+  tabId      String?
+  scopeTab   ProjectTab? @relation("EnvScopeTab", fields: [scopeTabId], references: [id], onDelete: SetNull)
+  scopeTabId String?
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
 
   @@index([projectId])
   @@index([tabId])
+  @@index([scopeTabId])
 }
 
 model Doc {

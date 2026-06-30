@@ -7,8 +7,11 @@ export type Component = "FRONTEND" | "BACKEND" | "DB"
 export type ProjectStatus = "Production" | "Staging" | "Development"
 export type EnvScope = "Production" | "Preview" | "Development"
 
-/** The three features that each carry their own independent set of tabs. */
-export type TabFeature = "DOC" | "ENV" | "README"
+/**
+ * The features that each carry their own independent set of tabs. Envs have
+ * two dimensions: `ENV` (component) and `ENV_SCOPE` (the Prod/Preview/Dev row).
+ */
+export type TabFeature = "DOC" | "ENV" | "ENV_SCOPE" | "README"
 
 /** A project-specific, editable tab (category) for one feature. */
 export type ProjectTab = {
@@ -34,8 +37,8 @@ export type EnvRecord = {
   id: string
   key: string
   value: string
-  scope: EnvScope
   tabId: string | null
+  scopeTabId: string | null
 }
 
 export type DocRecord = {

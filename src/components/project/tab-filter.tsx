@@ -80,6 +80,7 @@ export function TabFilter({
   canEdit,
   projectId,
   feature,
+  activeClassName = "bg-slate-800 text-white shadow-sm",
 }: {
   tabs: ProjectTab[]
   activeId: string
@@ -88,12 +89,11 @@ export function TabFilter({
   canEdit: boolean
   projectId: string
   feature: TabFeature
+  /** Classes applied to the active pill — lets callers tint the row. */
+  activeClassName?: string
 }) {
   const [manage, setManage] = useState(false)
-  const pills: { id: string; label: string }[] = [
-    { id: ALL_TAB, label: "All" },
-    ...tabs.map((t) => ({ id: t.id, label: t.name })),
-  ]
+  const pills = tabs.map((t) => ({ id: t.id, label: t.name }))
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -103,11 +103,13 @@ export function TabFilter({
           <button
             key={pill.id}
             type="button"
-            onClick={() => onChange(pill.id)}
+            // Clicking the active pill again clears the filter (shows all),
+            // since there is no dedicated "All" pill.
+            onClick={() => onChange(isActive ? ALL_TAB : pill.id)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
               isActive
-                ? "bg-slate-800 text-white shadow-sm"
+                ? activeClassName
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             )}
           >
@@ -156,16 +158,19 @@ export function TabField({
   tabs,
   defaultValue,
   label = "Tab",
+  name = "tabId",
 }: {
   tabs: ProjectTab[]
   defaultValue?: string | null
   label?: string
+  /** Form field name — use "scopeTabId" for the env scope dimension. */
+  name?: string
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="tabId">{label}</Label>
-      <Select name="tabId" defaultValue={defaultValue ?? "none"}>
-        <SelectTrigger id="tabId" className="h-10 w-full">
+      <Label htmlFor={name}>{label}</Label>
+      <Select name={name} defaultValue={defaultValue ?? "none"}>
+        <SelectTrigger id={name} className="h-10 w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -184,6 +189,7 @@ export function TabField({
 const featureNoun: Record<TabFeature, string> = {
   DOC: "documentation",
   ENV: "environment variables",
+  ENV_SCOPE: "environment scopes",
   README: "READMEs",
 }
 

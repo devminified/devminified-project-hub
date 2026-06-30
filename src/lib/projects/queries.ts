@@ -142,8 +142,8 @@ export async function getProjectEnvs(slug: string): Promise<EnvRecord[]> {
       id: e.id,
       key: e.key,
       value: e.value,
-      scope: e.scope,
       tabId: e.tabId,
+      scopeTabId: e.scopeTabId,
     }))
   })
 }

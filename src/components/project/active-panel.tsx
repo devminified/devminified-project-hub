@@ -46,11 +46,20 @@ export async function ActivePanel({
   }
 
   if (active === "envs") {
-    const [envs, tabs] = await Promise.all([
+    const [envs, tabs, scopeTabs] = await Promise.all([
       getProjectEnvs(summary.slug),
       getProjectTabs(summary.slug, "ENV"),
+      getProjectTabs(summary.slug, "ENV_SCOPE"),
     ])
-    return <EnvsPanel envs={envs} tabs={tabs} projectId={summary.id} canEdit={canEdit} />
+    return (
+      <EnvsPanel
+        envs={envs}
+        tabs={tabs}
+        scopeTabs={scopeTabs}
+        projectId={summary.id}
+        canEdit={canEdit}
+      />
+    )
   }
 
   if (active === "docs") {

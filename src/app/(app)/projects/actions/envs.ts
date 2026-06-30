@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma"
 import { requireProjectEditor } from "@/lib/dal"
 import {
-  asScope,
   asTabId,
   revalidateProject,
   type ActionState,
@@ -23,8 +22,8 @@ export async function createEnv(
       projectId,
       key,
       value: String(formData.get("value") ?? ""),
-      scope: asScope(formData.get("scope")),
       tabId: asTabId(formData.get("tabId")),
+      scopeTabId: asTabId(formData.get("scopeTabId")),
     },
   })
   await revalidateProject(projectId)
@@ -58,8 +57,8 @@ export async function createEnvsBulk(
 ): Promise<ActionState> {
   const projectId = String(formData.get("projectId") ?? "")
   await requireProjectEditor(projectId)
-  const scope = asScope(formData.get("scope"))
   const tabId = asTabId(formData.get("tabId"))
+  const scopeTabId = asTabId(formData.get("scopeTabId"))
   const entries = parseEnvBlock(String(formData.get("raw") ?? ""))
 
   if (!projectId) return { error: "Missing project." }
@@ -72,8 +71,8 @@ export async function createEnvsBulk(
       projectId,
       key: e.key,
       value: e.value,
-      scope,
       tabId,
+      scopeTabId,
     })),
   })
   await revalidateProject(projectId)
@@ -100,8 +99,8 @@ export async function updateEnv(
     data: {
       key,
       value: String(formData.get("value") ?? ""),
-      scope: asScope(formData.get("scope")),
       tabId: asTabId(formData.get("tabId")),
+      scopeTabId: asTabId(formData.get("scopeTabId")),
     },
   })
   await revalidateProject(env.projectId)
