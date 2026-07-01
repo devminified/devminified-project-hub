@@ -52,11 +52,6 @@ export function ProjectHero({
                 </h1>
                 <StatusBadge status={summary.status} />
               </div>
-              {summary.description && (
-                <p className="mt-1 max-w-2xl text-sm text-slate-500">
-                  {summary.description}
-                </p>
-              )}
             </div>
           </div>
           {isAdmin && (

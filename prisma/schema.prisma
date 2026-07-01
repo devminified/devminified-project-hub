@@ -156,6 +156,10 @@ model Doc {
   id          String      @id @default(cuid())
   title       String
   description String
+  // For file-backed docs (PDF / Word): Cloudinary URL + mime type. Null for
+  // plain text/markdown docs, whose content lives in `description`.
+  fileUrl     String?
+  fileType    String?
   // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
   component   Component?
   tab         ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)
@@ -173,6 +177,10 @@ model Readme {
   id        String      @id @default(cuid())
   title     String
   content   String
+  // For file-backed readmes (PDF / Word): Cloudinary URL + mime type. Null for
+  // plain text/markdown readmes, whose content lives in `content`.
+  fileUrl   String?
+  fileType  String?
   // Legacy fixed category, superseded by `tab`. Kept for backwards-compat.
   component Component?
   tab       ProjectTab? @relation(fields: [tabId], references: [id], onDelete: SetNull)

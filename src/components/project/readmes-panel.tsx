@@ -1,10 +1,18 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { ScrollText, Upload } from "lucide-react"
+import { Code2, Eye, ScrollText, Upload } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { ProjectTab, ReadmeRecord } from "@/lib/projects/types"
+import { Markdown } from "@/components/ui/markdown"
+import { FileOpenButton, FilePreview, fileLinks } from "./file-preview"
+import {
+  PreparedFileList,
+  prepareFile,
+  uploadPreparedFiles,
+  type PreparedFile,
+} from "./upload-files"
 import {
   createReadme,
   createReadmesBulk,
@@ -106,34 +114,22 @@ export function ReadmesPanel({
       ) : (
         <div className="space-y-4">
           {filtered.map((readme) => (
-            <div key={readme.id} className="overflow-hidden rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <ScrollText className="size-4 text-blue-500" />
-                  <span className="font-mono text-xs font-medium text-slate-700">
-                    {readme.title}
-                  </span>
-                  <TabBadge tab={readme.tabId ? byId.get(readme.tabId) : undefined} />
-                </div>
-                {canEdit && (
-                  <RowActions
-                    onEdit={() => setDialog({ open: true, readme })}
-                    onDelete={async () => {
-                      const ok = await confirm({
-                        title: "Delete readme?",
-                        description: `Delete "${readme.title}"? This can't be undone.`,
-                        confirmLabel: "Delete",
-                        destructive: true,
-                      })
-                      if (ok) startDelete(() => deleteReadme(readme.id).then(() => {}))
-                    }}
-                  />
-                )}
-              </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-slate-700">
-                {readme.content}
-              </pre>
-            </div>
+            <ReadmeCard
+              key={readme.id}
+              readme={readme}
+              tab={readme.tabId ? byId.get(readme.tabId) : undefined}
+              canEdit={canEdit}
+              onEdit={() => setDialog({ open: true, readme })}
+              onDelete={async () => {
+                const ok = await confirm({
+                  title: "Delete readme?",
+                  description: `Delete "${readme.title}"? This can't be undone.`,
+                  confirmLabel: "Delete",
+                  destructive: true,
+                })
+                if (ok) startDelete(() => deleteReadme(readme.id).then(() => {}))
+              }}
+            />
           ))}
         </div>
       )}
@@ -158,6 +154,88 @@ export function ReadmesPanel({
   )
 }
 
+function ReadmeCard({
+  readme,
+  tab,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  readme: ReadmeRecord
+  tab: ProjectTab | undefined
+  canEdit: boolean
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const [raw, setRaw] = useState(false)
+  const isFile = Boolean(readme.fileUrl)
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-slate-200">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <ScrollText className="size-4 text-blue-500" />
+          <span className="font-mono text-xs font-medium text-slate-700">{readme.title}</span>
+          <TabBadge tab={tab} />
+        </div>
+        <div className="flex items-center gap-1">
+          {isFile ? (
+            <FileOpenButton
+              href={fileLinks("readme", readme.id, readme.fileUrl!, readme.fileType, readme.title).open}
+              label="Open"
+              className="h-7 px-2 py-0 text-xs"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRaw((v) => !v)}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              aria-label={raw ? "Show preview" : "Show raw markdown"}
+            >
+              {raw ? (
+                <>
+                  <Eye className="size-3.5" />
+                  Preview
+                </>
+              ) : (
+                <>
+                  <Code2 className="size-3.5" />
+                  Raw
+                </>
+              )}
+            </button>
+          )}
+          {canEdit && <RowActions onEdit={onEdit} onDelete={onDelete} />}
+        </div>
+      </div>
+      {isFile ? (
+        <div className="p-4">
+          <FilePreview
+            kind="readme"
+            id={readme.id}
+            fileUrl={readme.fileUrl!}
+            fileType={readme.fileType}
+            title={readme.title}
+            className="h-[70vh]"
+          />
+        </div>
+      ) : raw ? (
+        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-slate-700">
+          {readme.content}
+        </pre>
+      ) : readme.content.trim() ? (
+        <div className="px-5 py-4">
+          <Markdown>{readme.content}</Markdown>
+        </div>
+      ) : (
+        <p className="px-5 py-8 text-center text-sm text-slate-400">
+          This readme is empty. Edit it to add content.
+        </p>
+      )}
+    </div>
+  )
+}
+
 function UploadReadmesDialog({
   open,
   onOpenChange,
@@ -169,7 +247,7 @@ function UploadReadmesDialog({
   tabs: ProjectTab[]
   projectId: string
 }) {
-  const [files, setFiles] = useState<{ title: string; content: string }[]>([])
+  const [files, setFiles] = useState<PreparedFile[]>([])
   const [tabId, setTabId] = useState<string>("none")
   const [error, setError] = useState<string | null>(null)
   const [reading, setReading] = useState(false)
@@ -184,12 +262,7 @@ function UploadReadmesDialog({
     setReading(true)
     setError(null)
     try {
-      const read = await Promise.all(
-        Array.from(list).map(async (f) => ({
-          title: f.name,
-          content: await f.text(),
-        }))
-      )
+      const read = await Promise.all(Array.from(list).map(prepareFile))
       setFiles(read)
     } catch {
       setError("Could not read one or more files.")
@@ -205,7 +278,12 @@ function UploadReadmesDialog({
     }
     const tab = tabId === "none" ? null : tabId
     startUpload(async () => {
-      const res = await createReadmesBulk(projectId, files, tab)
+      const payload = await uploadPreparedFiles(files, projectId)
+      if (payload.error) {
+        setError(payload.error)
+        return
+      }
+      const res = await createReadmesBulk(projectId, payload.entries, tab)
       if (res.error) setError(res.error)
       else onOpenChange(false)
     })
@@ -243,11 +321,13 @@ function UploadReadmesDialog({
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition-colors hover:border-blue-300 hover:bg-blue-50/40">
             <Upload className="size-6 text-blue-500" />
             <span className="text-sm font-medium text-slate-700">Click to choose files</span>
-            <span className="text-xs text-slate-400">Markdown / text files work best</span>
+            <span className="text-xs text-slate-400">
+              Markdown / text, or PDF &amp; Word documents
+            </span>
             <input
               type="file"
               multiple
-              accept=".md,.markdown,.txt,text/*"
+              accept=".md,.markdown,.txt,.pdf,.doc,.docx,text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={handleFiles}
             />
@@ -255,27 +335,7 @@ function UploadReadmesDialog({
 
           {reading && <p className="text-sm text-slate-500">Reading files…</p>}
 
-          {files.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                {files.length} {files.length === 1 ? "file" : "files"} ready
-              </p>
-              <ul className="max-h-40 space-y-1 overflow-y-auto">
-                {files.map((f, i) => (
-                  <li
-                    key={`${f.title}-${i}`}
-                    className="flex items-center gap-2 rounded-md bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700"
-                  >
-                    <ScrollText className="size-3.5 shrink-0 text-blue-500" />
-                    <span className="truncate">{f.title}</span>
-                    <span className="ml-auto shrink-0 text-xs text-slate-400">
-                      {f.content.length} chars
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {files.length > 0 && <PreparedFileList files={files} />}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>

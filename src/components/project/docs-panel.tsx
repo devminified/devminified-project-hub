@@ -1,9 +1,18 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Download, FileText, Upload } from "lucide-react"
+import { Code2, Download, Eye, FileText, Upload } from "lucide-react"
 
 import type { DocRecord, ProjectTab } from "@/lib/projects/types"
+import { Markdown } from "@/components/ui/markdown"
+import { FileOpenButton, FilePreview, fileLinks } from "./file-preview"
+import { fileKind, isMarkdownFile } from "./utils"
+import {
+  PreparedFileList,
+  prepareFile,
+  uploadPreparedFiles,
+  type PreparedFile,
+} from "./upload-files"
 import {
   createDoc,
   createDocsBulk,
@@ -122,14 +131,28 @@ export function DocsPanel({
                     </p>
                     <TabBadge tab={doc.tabId ? byId.get(doc.tabId) : undefined} />
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{doc.description}</p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+                  {doc.fileUrl
+                    ? fileKind(doc.title, doc.fileType) === "pdf"
+                      ? "PDF document"
+                      : "Word document"
+                    : doc.description}
+                </p>
                   <p className="mt-2 text-xs text-slate-400">Updated {doc.updatedAt}</p>
                 </div>
               </button>
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => downloadText(doc.title, doc.description)}
+                  onClick={() =>
+                    doc.fileUrl
+                      ? window.open(
+                          fileLinks("doc", doc.id, doc.fileUrl, doc.fileType, doc.title).open,
+                          "_blank",
+                          "noopener,noreferrer"
+                        )
+                      : downloadText(doc.title, doc.description)
+                  }
                   aria-label="Download"
                   className="flex size-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-blue)]"
                 >
@@ -191,46 +214,108 @@ function DocViewDialog({
 }) {
   return (
     <Dialog open={Boolean(doc)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
-        {doc && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-lg">
-                <FileText className="size-5 text-blue-500" />
-                {doc.title}
-                <TabBadge tab={tab} />
-              </DialogTitle>
-              <DialogDescription>Updated {doc.updatedAt}</DialogDescription>
-            </DialogHeader>
-
-            <div className="py-2">
-              {doc.description ? (
-                <pre className="max-h-[70vh] min-h-[40vh] overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-5 font-mono text-sm leading-relaxed text-slate-700">
-                  {doc.description}
-                </pre>
-              ) : (
-                <p className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
-                  This document has no content. Edit it to add details.
-                </p>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose}>
-                Close
-              </Button>
-              <Button
-                onClick={() => downloadText(doc.title, doc.description)}
-                className="gap-1.5 bg-[var(--brand-primary)] text-white"
-              >
-                <Download className="size-4" />
-                Download
-              </Button>
-            </DialogFooter>
-          </>
-        )}
+      <DialogContent className="flex h-[95vh] w-[96vw] max-w-[96vw] flex-col">
+        {doc && <DocViewContent key={doc.id} doc={doc} tab={tab} onClose={onClose} />}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function DocViewContent({
+  doc,
+  tab,
+  onClose,
+}: {
+  doc: DocRecord
+  tab: ProjectTab | undefined
+  onClose: () => void
+}) {
+  const isFile = Boolean(doc.fileUrl)
+  const isMarkdown = !isFile && isMarkdownFile(doc.title)
+  const [raw, setRaw] = useState(false)
+
+  return (
+    <>
+      <DialogHeader className="shrink-0">
+        <DialogTitle className="flex items-center gap-2 text-lg">
+          <FileText className="size-5 text-blue-500" />
+          {doc.title}
+          <TabBadge tab={tab} />
+          {isMarkdown && doc.description && (
+            <button
+              type="button"
+              onClick={() => setRaw((v) => !v)}
+              className="ml-auto flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              aria-label={raw ? "Show preview" : "Show raw markdown"}
+            >
+              {raw ? (
+                <>
+                  <Eye className="size-3.5" />
+                  Preview
+                </>
+              ) : (
+                <>
+                  <Code2 className="size-3.5" />
+                  Raw
+                </>
+              )}
+            </button>
+          )}
+        </DialogTitle>
+        <DialogDescription>Updated {doc.updatedAt}</DialogDescription>
+      </DialogHeader>
+
+      <div className="min-h-0 flex-1 py-2">
+        {isFile ? (
+          <FilePreview
+            kind="doc"
+            id={doc.id}
+            fileUrl={doc.fileUrl!}
+            fileType={doc.fileType}
+            title={doc.title}
+            className="h-full"
+          />
+        ) : doc.description ? (
+          isMarkdown && !raw ? (
+            <div className="h-full overflow-auto rounded-lg bg-slate-50 px-6 py-5">
+              <div className="mx-auto max-w-4xl">
+                <Markdown>{doc.description}</Markdown>
+              </div>
+            </div>
+          ) : (
+            <pre className="h-full overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-5 font-mono text-sm leading-relaxed text-slate-700">
+              {doc.description}
+            </pre>
+          )
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <p className="rounded-lg border border-dashed border-slate-200 px-8 py-10 text-center text-sm text-slate-400">
+              This document has no content. Edit it to add details.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="shrink-0">
+        <Button variant="outline" onClick={onClose}>
+          Close
+        </Button>
+        {isFile ? (
+          <FileOpenButton
+            href={fileLinks("doc", doc.id, doc.fileUrl!, doc.fileType, doc.title).open}
+            label="Download"
+          />
+        ) : (
+          <Button
+            onClick={() => downloadText(doc.title, doc.description)}
+            className="gap-1.5 bg-[var(--brand-primary)] text-white"
+          >
+            <Download className="size-4" />
+            Download
+          </Button>
+        )}
+      </DialogFooter>
+    </>
   )
 }
 
@@ -245,7 +330,7 @@ function UploadDocsDialog({
   tabs: ProjectTab[]
   projectId: string
 }) {
-  const [files, setFiles] = useState<{ title: string; content: string }[]>([])
+  const [files, setFiles] = useState<PreparedFile[]>([])
   const [tabId, setTabId] = useState<string>("none")
   const [error, setError] = useState<string | null>(null)
   const [reading, setReading] = useState(false)
@@ -260,12 +345,7 @@ function UploadDocsDialog({
     setReading(true)
     setError(null)
     try {
-      const read = await Promise.all(
-        Array.from(list).map(async (f) => ({
-          title: f.name,
-          content: await f.text(),
-        }))
-      )
+      const read = await Promise.all(Array.from(list).map(prepareFile))
       setFiles(read)
     } catch {
       setError("Could not read one or more files.")
@@ -281,7 +361,12 @@ function UploadDocsDialog({
     }
     const tab = tabId === "none" ? null : tabId
     startUpload(async () => {
-      const res = await createDocsBulk(projectId, files, tab)
+      const payload = await uploadPreparedFiles(files, projectId)
+      if (payload.error) {
+        setError(payload.error)
+        return
+      }
+      const res = await createDocsBulk(projectId, payload.entries, tab)
       if (res.error) setError(res.error)
       else onOpenChange(false)
     })
@@ -319,11 +404,13 @@ function UploadDocsDialog({
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition-colors hover:border-blue-300 hover:bg-blue-50/40">
             <Upload className="size-6 text-blue-500" />
             <span className="text-sm font-medium text-slate-700">Click to choose files</span>
-            <span className="text-xs text-slate-400">Markdown / text files work best</span>
+            <span className="text-xs text-slate-400">
+              Markdown / text, or PDF &amp; Word documents
+            </span>
             <input
               type="file"
               multiple
-              accept=".md,.markdown,.txt,.json,.yml,.yaml,text/*"
+              accept=".md,.markdown,.txt,.json,.yml,.yaml,.pdf,.doc,.docx,text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={handleFiles}
             />
@@ -331,27 +418,7 @@ function UploadDocsDialog({
 
           {reading && <p className="text-sm text-slate-500">Reading files…</p>}
 
-          {files.length > 0 && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                {files.length} {files.length === 1 ? "file" : "files"} ready
-              </p>
-              <ul className="max-h-40 space-y-1 overflow-y-auto">
-                {files.map((f, i) => (
-                  <li
-                    key={`${f.title}-${i}`}
-                    className="flex items-center gap-2 rounded-md bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700"
-                  >
-                    <FileText className="size-3.5 shrink-0 text-blue-500" />
-                    <span className="truncate">{f.title}</span>
-                    <span className="ml-auto shrink-0 text-xs text-slate-400">
-                      {f.content.length} chars
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {files.length > 0 && <PreparedFileList files={files} />}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>

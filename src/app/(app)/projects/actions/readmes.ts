@@ -31,14 +31,24 @@ export async function createReadme(
 
 export async function createReadmesBulk(
   projectId: string,
-  files: { title: string; content: string }[],
+  files: {
+    title: string
+    content: string
+    fileUrl?: string | null
+    fileType?: string | null
+  }[],
   tabId: string | null = null
 ): Promise<ActionState> {
   await requireProjectEditor(projectId)
   if (!projectId) return { error: "Missing project." }
 
   const clean = files
-    .map((f) => ({ title: f.title.trim(), content: f.content }))
+    .map((f) => ({
+      title: f.title.trim(),
+      content: f.content,
+      fileUrl: f.fileUrl ?? null,
+      fileType: f.fileType ?? null,
+    }))
     .filter((f) => f.title)
   if (clean.length === 0) return { error: "No files selected." }
 
@@ -47,6 +57,8 @@ export async function createReadmesBulk(
       projectId,
       title: f.title,
       content: f.content,
+      fileUrl: f.fileUrl,
+      fileType: f.fileType,
       tabId,
     })),
   })

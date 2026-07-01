@@ -14,6 +14,38 @@ export function isUrl(value: string) {
   return /^https?:\/\//i.test(value.trim())
 }
 
+/** True when a file name looks like a markdown document. */
+export function isMarkdownFile(title: string) {
+  return /\.(md|markdown)$/i.test(title.trim())
+}
+
+/** True when a file name is an uploadable binary document (PDF / Word). */
+export function isDocumentFile(name: string) {
+  return /\.(pdf|docx?)$/i.test(name.trim())
+}
+
+/**
+ * Classify a file-backed record by name and/or mime type. Returns "pdf",
+ * "word", or null (plain text/markdown, rendered from stored content).
+ */
+export function fileKind(
+  title: string,
+  fileType?: string | null
+): "pdf" | "word" | null {
+  const type = (fileType ?? "").toLowerCase()
+  const name = title.trim().toLowerCase()
+  if (type.includes("pdf") || name.endsWith(".pdf")) return "pdf"
+  if (
+    type.includes("msword") ||
+    type.includes("wordprocessing") ||
+    name.endsWith(".doc") ||
+    name.endsWith(".docx")
+  ) {
+    return "word"
+  }
+  return null
+}
+
 /** Ensure a downloaded file has an extension, defaulting to `.md`. */
 export function ensureFileName(title: string) {
   return /\.[a-z0-9]+$/i.test(title.trim())

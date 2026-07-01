@@ -177,6 +177,8 @@ export async function getProjectDocs(slug: string): Promise<DocRecord[]> {
       description: d.description,
       tabId: d.tabId,
       updatedAt: toUpdatedAt(d.updatedAt),
+      fileUrl: d.fileUrl,
+      fileType: d.fileType,
     }))
   })
 }
@@ -207,6 +209,8 @@ export async function getProjectReadmes(slug: string): Promise<ReadmeRecord[]> {
       title: r.title,
       content: r.content,
       tabId: r.tabId,
+      fileUrl: r.fileUrl,
+      fileType: r.fileType,
     }))
   })
 }
