@@ -92,6 +92,9 @@ model Project {
   name          String
   description   String
   status        ProjectStatus @default(Development)
+  // Lifecycle flag: archived projects are hidden from the main listing and
+  // shown only on the /archive page. Separate from `status` (deploy stage).
+  archived      Boolean       @default(false)
   tags          String[]
   // Optional project image (data URL or external URL) shown on the card + hero.
   imageUrl      String?

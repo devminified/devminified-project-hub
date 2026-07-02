@@ -33,14 +33,18 @@ function visibilityWhere(viewer: Viewer) {
  * Dashboard list. Selects only scalar columns — no env/doc/readme rows — so the
  * grid of project cards loads fast regardless of how much content each holds.
  */
-export async function getProjectList(viewer: Viewer): Promise<ProjectListItem[]> {
+export async function getProjectList(
+  viewer: Viewer,
+  { archived = false }: { archived?: boolean } = {}
+): Promise<ProjectListItem[]> {
   const rows = await prisma.project.findMany({
-    where: visibilityWhere(viewer),
+    where: { ...visibilityWhere(viewer), archived },
     orderBy: { updatedAt: "desc" },
     select: {
       slug: true,
       name: true,
       status: true,
+      archived: true,
       description: true,
       tags: true,
       imageUrl: true,
@@ -54,6 +58,7 @@ export async function getProjectList(viewer: Viewer): Promise<ProjectListItem[]>
       id: p.slug,
       name: p.name,
       status: p.status,
+      archived: p.archived,
       description: p.description,
       tags: p.tags,
       // Pre-resolved to a small src (optimized Cloudinary URL, or the cacheable
@@ -84,6 +89,7 @@ export async function getProjectSummary(
           name: true,
           description: true,
           status: true,
+          archived: true,
           tags: true,
           imageUrl: true,
           detailSections: true,
@@ -100,6 +106,7 @@ export async function getProjectSummary(
         name: p.name,
         description: p.description,
         status: p.status,
+        archived: p.archived,
         tags: p.tags,
         imageUrl: p.imageUrl,
         detailSections: parseDetailSections(p.detailSections),

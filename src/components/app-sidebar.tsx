@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Search } from "lucide-react";
+import { Archive, LogOut, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { LibraryFilled, UsersFilled } from "@/components/svgs";
@@ -35,6 +35,13 @@ const nav: {
     href: "/",
     icon: LibraryFilled,
     match: (p: string) => p === "/" || p.startsWith("/projects"),
+    adminOnly: false,
+  },
+  {
+    title: "Archive",
+    href: "/archive",
+    icon: Archive,
+    match: (p: string) => p.startsWith("/archive"),
     adminOnly: false,
   },
   {

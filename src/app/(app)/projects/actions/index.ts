@@ -7,6 +7,7 @@ export {
   createProject,
   updateProject,
   updateProjectDetails,
+  setProjectArchived,
   deleteProject,
 } from "./projects"
 export { createEnv, createEnvsBulk, updateEnv, deleteEnv } from "./envs"

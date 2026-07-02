@@ -125,9 +125,34 @@ export async function updateProjectDetails(
   return { success: true }
 }
 
+/**
+ * Archive or restore a project. Archived projects drop off the main listing
+ * and appear on /archive instead; restoring reverses it. Admin-only.
+ */
+export async function setProjectArchived(
+  id: string,
+  archived: boolean
+): Promise<ActionState> {
+  await requireAdmin()
+  if (!id) return { error: "Missing project." }
+
+  const project = await prisma.project.update({
+    where: { id },
+    data: { archived },
+    select: { slug: true },
+  })
+
+  revalidateTag(projectTag(project.slug), { expire: 0 })
+  revalidatePath("/")
+  revalidatePath("/archive")
+  revalidatePath(`/projects/${project.slug}`)
+  return { success: true }
+}
+
 export async function deleteProject(id: string): Promise<void> {
   await requireAdmin()
   await prisma.project.delete({ where: { id } })
   revalidatePath("/")
+  revalidatePath("/archive")
   redirect("/")
 }

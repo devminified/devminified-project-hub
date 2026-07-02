@@ -1,12 +1,13 @@
 "use client"
 
 import { useActionState, useEffect, useState, useTransition } from "react"
-import { ImagePlus, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Archive, ArchiveRestore, ImagePlus, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
   createProject,
   deleteProject,
+  setProjectArchived,
   updateProject,
   uploadProjectImage,
   type ActionState,
@@ -36,6 +37,7 @@ export type ProjectInput = {
   name: string
   description: string
   status: "Production" | "Staging" | "Development"
+  archived: boolean
   tags: string[]
   imageUrl: string | null
 }
@@ -232,6 +234,7 @@ export function ProjectCreateButton() {
 export function ProjectActions({ project }: { project: ProjectInput }) {
   const [open, setOpen] = useState(false)
   const [isDeleting, startDelete] = useTransition()
+  const [isArchiving, startArchive] = useTransition()
   const { confirm, dialog: confirmDialog } = useConfirm()
 
   async function handleDelete() {
@@ -247,11 +250,45 @@ export function ProjectActions({ project }: { project: ProjectInput }) {
     })
   }
 
+  async function handleArchiveToggle() {
+    const next = !project.archived
+    const ok = await confirm({
+      title: next ? "Archive project?" : "Restore project?",
+      description: next
+        ? `Archive ${project.name}? It will be hidden from the main listing and moved to the Archive page.`
+        : `Restore ${project.name}? It will reappear in the main projects listing.`,
+      confirmLabel: next ? "Archive" : "Restore",
+    })
+    if (!ok) return
+    startArchive(async () => {
+      await setProjectArchived(project.id, next)
+    })
+  }
+
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
         <Pencil className="size-3.5" />
         Edit
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={isArchiving}
+        onClick={handleArchiveToggle}
+        className="gap-1.5"
+      >
+        {project.archived ? (
+          <>
+            <ArchiveRestore className="size-3.5" />
+            Restore
+          </>
+        ) : (
+          <>
+            <Archive className="size-3.5" />
+            Archive
+          </>
+        )}
       </Button>
       <Button
         variant="outline"

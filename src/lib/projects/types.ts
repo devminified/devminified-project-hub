@@ -67,6 +67,8 @@ export type ProjectListItem = {
   id: string // slug, used for routing
   name: string
   status: ProjectStatus
+  // True when the project is archived (hidden from the main listing).
+  archived: boolean
   description: string
   tags: string[]
   // A ready-to-use, small image src (optimized Cloudinary URL or the cacheable
@@ -93,6 +95,7 @@ export type ProjectSummary = {
   name: string
   description: string
   status: ProjectStatus
+  archived: boolean
   tags: string[]
   imageUrl: string | null
   detailSections: DetailSection[]

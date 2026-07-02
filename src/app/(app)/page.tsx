@@ -2,11 +2,11 @@ import { getProjectList } from "@/lib/projects/queries";
 import { getCurrentUser } from "@/lib/dal";
 import { SidebarTrigger } from "@/components/animate-ui/components/radix/sidebar";
 import { ProjectCreateButton } from "@/components/project-form-dialog";
-import { ProjectCard } from "@/components/project/project-card";
-import { EmptyResult } from "@/components/empty-result";
+import { ProjectsExplorer } from "@/components/project/projects-explorer";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
+  // Active projects only — archived ones live on /archive.
   const projects = await getProjectList({ id: user.id, role: user.role });
   const isAdmin = user.role === "ADMIN";
 
@@ -31,22 +31,15 @@ export default async function DashboardPage() {
           {isAdmin && <ProjectCreateButton />}
         </div>
 
-        {projects.length === 0 ? (
-          <EmptyResult
-            title="No projects found"
-            description={
-              isAdmin
-                ? "Create your first project to start tracking its environments, docs, and readmes."
-                : "You don't have access to any projects yet. Ask an admin to grant you access."
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        )}
+        <ProjectsExplorer
+          projects={projects}
+          emptyTitle="No projects found"
+          emptyDescription={
+            isAdmin
+              ? "Create your first project to start tracking its environments, docs, and readmes."
+              : "You don't have access to any projects yet. Ask an admin to grant you access."
+          }
+        />
       </main>
     </div>
   );
