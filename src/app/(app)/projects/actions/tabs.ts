@@ -2,11 +2,11 @@
 
 import { prisma } from "@/lib/prisma"
 import { requireProjectEditor } from "@/lib/dal"
-import type { TabFeature } from "@/lib/projects/types"
+import { TAB_FEATURES, type TabFeature } from "@/lib/projects/types"
 import { revalidateProject, type ActionState } from "./helpers"
 
 function asFeature(value: unknown): TabFeature | null {
-  return value === "DOC" || value === "ENV" || value === "README" ? value : null
+  return TAB_FEATURES.includes(value as TabFeature) ? (value as TabFeature) : null
 }
 
 /** Add a new tab to a project's feature, appended after the existing ones. */

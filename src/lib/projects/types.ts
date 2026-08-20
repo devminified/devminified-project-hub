@@ -10,8 +10,14 @@ export type EnvScope = "Production" | "Preview" | "Development"
 /**
  * The features that each carry their own independent set of tabs. Envs have
  * two dimensions: `ENV` (component) and `ENV_SCOPE` (the Prod/Preview/Dev row).
+ *
+ * Kept as a runtime array with the type derived from it, so server-side
+ * validation can check membership against this list rather than restating it.
+ * Restating it is how `ENV_SCOPE` came to be a valid type but a rejected value.
+ * Mirrors `enum TabFeature` in prisma/schema.prisma.
  */
-export type TabFeature = "DOC" | "ENV" | "ENV_SCOPE" | "README"
+export const TAB_FEATURES = ["DOC", "ENV", "ENV_SCOPE", "README"] as const
+export type TabFeature = (typeof TAB_FEATURES)[number]
 
 /** A project-specific, editable tab (category) for one feature. */
 export type ProjectTab = {
