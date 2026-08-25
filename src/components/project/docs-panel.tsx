@@ -181,7 +181,7 @@ export function DocsPanel({
       <DocDialog
         key={dialog.doc?.id ?? "create"}
         open={dialog.open}
-        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
+        onOpenChange={(open) => setDialog((d) => (d.open === open ? d : { ...d, open }))}
         doc={dialog.doc}
         tabs={tabs}
         projectId={projectId}
