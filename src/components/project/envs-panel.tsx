@@ -176,7 +176,7 @@ export function EnvsPanel({
       <EnvDialog
         key={dialog.env?.id ?? "create"}
         open={dialog.open}
-        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
+        onOpenChange={(open) => setDialog((d) => (d.open === open ? d : { ...d, open }))}
         env={dialog.env}
         tabs={tabs}
         scopeTabs={scopeTabs}

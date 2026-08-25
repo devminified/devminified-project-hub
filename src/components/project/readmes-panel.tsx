@@ -137,7 +137,7 @@ export function ReadmesPanel({
       <ReadmeDialog
         key={dialog.readme?.id ?? "create"}
         open={dialog.open}
-        onOpenChange={(open) => setDialog((d) => ({ ...d, open }))}
+        onOpenChange={(open) => setDialog((d) => (d.open === open ? d : { ...d, open }))}
         readme={dialog.readme}
         tabs={tabs}
         projectId={projectId}
