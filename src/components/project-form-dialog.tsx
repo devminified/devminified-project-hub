@@ -171,7 +171,11 @@ function ProjectDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue={project?.status ?? "Development"}>
+                <Select
+                  name="status"
+                  defaultValue={project?.status ?? "Development"}
+                  items={{ Production: "Production", Staging: "Staging", Development: "Development" }}
+                >
                   <SelectTrigger id="status" className="h-10 w-full">
                     <SelectValue />
                   </SelectTrigger>

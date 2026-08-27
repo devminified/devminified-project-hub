@@ -536,7 +536,11 @@ function UserDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="role">Role</Label>
-              <Select name="role" defaultValue={user?.role ?? "USER"}>
+              <Select
+                name="role"
+                defaultValue={user?.role ?? "USER"}
+                items={{ ADMIN: "Admin", USER: "Member" }}
+              >
                 <SelectTrigger id="role" className="h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>
