@@ -3,7 +3,7 @@ import "server-only"
 import { unstable_cache } from "next/cache"
 
 import { prisma } from "@/lib/prisma"
-import { parseDetailSections, projectImageSrc, toUpdatedAt } from "./utils"
+import { parseDetailSections, parseSecretSections, projectImageSrc, toUpdatedAt } from "./utils"
 import type {
   DetailSection,
   DocRecord,
@@ -201,7 +201,7 @@ export async function getProjectSecrets(slug: string): Promise<DetailSection[]> 
       where: { slug },
       select: { secretSections: true },
     })
-    return p ? parseDetailSections(p.secretSections) : []
+    return p ? parseSecretSections(p.secretSections) : []
   })
 }
 

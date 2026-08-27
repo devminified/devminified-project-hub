@@ -39,6 +39,15 @@ export type DetailItem = { label: string; value: string }
 /** An admin-defined heading with any number of detail items below it. */
 export type DetailSection = { heading: string; items: DetailItem[] }
 
+/**
+ * A Details-tab entry: either a `{label,value}` pair, or a freeform text note
+ * (a plain string). Secrets sections stay strictly `DetailItem` — see
+ * `DetailSection` above.
+ */
+export type DetailEntry = DetailItem | string
+/** A Details-tab heading with any number of label/value pairs or text notes. */
+export type RichDetailSection = { heading: string; items: DetailEntry[] }
+
 export type EnvRecord = {
   id: string
   key: string
@@ -104,7 +113,7 @@ export type ProjectSummary = {
   archived: boolean
   tags: string[]
   imageUrl: string | null
-  detailSections: DetailSection[]
+  detailSections: RichDetailSection[]
   updatedAt: string
   counts: ProjectCounts
 }

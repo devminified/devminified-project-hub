@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin, requireProjectEditor } from "@/lib/dal"
 import { projectTag } from "@/lib/projects/queries"
-import type { DetailSection } from "@/lib/projects/types"
+import type { DetailEntry, RichDetailSection } from "@/lib/projects/types"
 import {
   asStatus,
   parseTags,
@@ -93,10 +93,13 @@ export async function updateProject(
   return { success: true }
 }
 
-/** Replace a project's dynamic detail sections (headings + label/value items). */
+/**
+ * Replace a project's dynamic detail sections (headings + a mix of label/value
+ * pairs and freeform text notes).
+ */
 export async function updateProjectDetails(
   projectId: string,
-  sections: DetailSection[]
+  sections: RichDetailSection[]
 ): Promise<ActionState> {
   if (!projectId) return { error: "Missing project." }
   await requireProjectEditor(projectId)
@@ -106,11 +109,16 @@ export async function updateProjectDetails(
     .map((section) => ({
       heading: String(section.heading ?? "").trim(),
       items: (section.items ?? [])
-        .map((item) => ({
-          label: String(item.label ?? "").trim(),
-          value: String(item.value ?? "").trim(),
-        }))
-        .filter((item) => item.label || item.value),
+        .map((item): DetailEntry | null => {
+          if (typeof item === "string") {
+            const text = item.trim()
+            return text ? text : null
+          }
+          const label = String(item?.label ?? "").trim()
+          const value = String(item?.value ?? "").trim()
+          return label || value ? { label, value } : null
+        })
+        .filter((item): item is DetailEntry => item !== null),
     }))
     .filter((section) => section.heading || section.items.length > 0)
 
