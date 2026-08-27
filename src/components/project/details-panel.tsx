@@ -240,7 +240,7 @@ function DetailsEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl grid-rows-[auto_1fr_auto] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit details</DialogTitle>
           <DialogDescription>
@@ -255,7 +255,7 @@ function DetailsEditDialog({
           axis="y"
           values={draft}
           onReorder={setDraft}
-          className="max-h-[60vh] space-y-4 overflow-y-auto py-2 pr-1"
+          className="min-h-0 space-y-4 overflow-y-auto py-2 pr-1"
         >
           {draft.length === 0 && (
             <p className="rounded-lg border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
