@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { ExternalLink, Globe, Info, Pencil, Plus, Trash2 } from "lucide-react"
+import { ExternalLink, Globe, GripVertical, Info, Pencil, Plus, Trash2 } from "lucide-react"
+import { Reorder, useDragControls } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import type { DetailSection, ProjectSummary } from "@/lib/projects/types"
@@ -69,22 +70,7 @@ export function DetailsPanel({
               : "No detail sections yet."}
           </p>
         ) : (
-          sections.map((section, si) => (
-            <div key={si}>
-              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">
-                {section.heading || "Untitled"}
-              </h3>
-              {section.items.length === 0 ? (
-                <p className="mt-2 text-sm text-slate-400">No items.</p>
-              ) : (
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {section.items.map((item, ii) => (
-                    <DetailItemCard key={ii} label={item.label} value={item.value} />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
+          sections.map((section, si) => <DetailSectionBlock key={si} section={section} />)
         )}
       </div>
 
@@ -96,6 +82,25 @@ export function DetailsPanel({
         sections={sections}
       />
     </Panel>
+  )
+}
+
+function DetailSectionBlock({ section }: { section: DetailSection }) {
+  return (
+    <div>
+      <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">
+        {section.heading || "Untitled"}
+      </h3>
+      {section.items.length === 0 ? (
+        <p className="mt-2 text-sm text-slate-400">No items.</p>
+      ) : (
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {section.items.map((item, ii) => (
+            <DetailItemCard key={ii} label={item.label} value={item.value} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -151,7 +156,12 @@ function DetailItemCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-type EditSection = { heading: string; items: { label: string; value: string }[] }
+type EditItem = { id: string; label: string; value: string }
+type EditSection = { id: string; heading: string; items: EditItem[] }
+
+function makeId() {
+  return crypto.randomUUID()
+}
 
 function DetailsEditDialog({
   open,
@@ -167,10 +177,11 @@ function DetailsEditDialog({
   const [draft, setDraft] = useState<EditSection[]>(() =>
     sections.length > 0
       ? sections.map((s) => ({
+          id: makeId(),
           heading: s.heading,
-          items: s.items.map((i) => ({ label: i.label, value: i.value })),
+          items: s.items.map((i) => ({ id: makeId(), label: i.label, value: i.value })),
         }))
-      : [{ heading: "", items: [{ label: "", value: "" }] }]
+      : [{ id: makeId(), heading: "", items: [{ id: makeId(), label: "", value: "" }] }]
   )
   const [error, setError] = useState<string | null>(null)
   const [pending, startSave] = useTransition()
@@ -192,7 +203,10 @@ function DetailsEditDialog({
     )
   }
   function addSection() {
-    setDraft((prev) => [...prev, { heading: "", items: [{ label: "", value: "" }] }])
+    setDraft((prev) => [
+      ...prev,
+      { id: makeId(), heading: "", items: [{ id: makeId(), label: "", value: "" }] },
+    ])
   }
   function removeSection(si: number) {
     setDraft((prev) => prev.filter((_, i) => i !== si))
@@ -200,7 +214,7 @@ function DetailsEditDialog({
   function addItem(si: number) {
     setDraft((prev) =>
       prev.map((s, i) =>
-        i === si ? { ...s, items: [...s.items, { label: "", value: "" }] } : s
+        i === si ? { ...s, items: [...s.items, { id: makeId(), label: "", value: "" }] } : s
       )
     )
   }
@@ -210,6 +224,9 @@ function DetailsEditDialog({
         i === si ? { ...s, items: s.items.filter((_, j) => j !== ii) } : s
       )
     )
+  }
+  function reorderItems(si: number, items: EditItem[]) {
+    setDraft((prev) => prev.map((s, i) => (i === si ? { ...s, items } : s)))
   }
 
   function handleSave() {
@@ -233,7 +250,13 @@ function DetailsEditDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto py-2 pr-1">
+        <Reorder.Group
+          as="div"
+          axis="y"
+          values={draft}
+          onReorder={setDraft}
+          className="max-h-[60vh] space-y-4 overflow-y-auto py-2 pr-1"
+        >
           {draft.length === 0 && (
             <p className="rounded-lg border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
               No sections. Add a heading to get started.
@@ -241,61 +264,17 @@ function DetailsEditDialog({
           )}
 
           {draft.map((section, si) => (
-            <div key={si} className="rounded-xl border border-slate-200 p-4">
-              <div className="flex items-center gap-2">
-                <Input
-                  value={section.heading}
-                  onChange={(e) => updateSection(si, { heading: e.target.value })}
-                  placeholder="Heading (e.g. URLs, Credentials, Notes)"
-                  className="h-9 font-medium"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSection(si)}
-                  aria-label="Remove heading"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-
-              <div className="mt-3 space-y-2">
-                {section.items.map((item, ii) => (
-                  <div key={ii} className="flex items-center gap-2">
-                    <Input
-                      value={item.label}
-                      onChange={(e) => updateItem(si, ii, { label: e.target.value })}
-                      placeholder="Label"
-                      className="h-9 w-1/3"
-                    />
-                    <Input
-                      value={item.value}
-                      onChange={(e) => updateItem(si, ii, { value: e.target.value })}
-                      placeholder="Value or https://…"
-                      className="h-9 flex-1"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeItem(si, ii)}
-                      aria-label="Remove item"
-                      className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => addItem(si)}
-                  className="gap-1.5"
-                >
-                  <Plus className="size-3.5" />
-                  Add item
-                </Button>
-              </div>
-            </div>
+            <EditSectionCard
+              key={section.id}
+              section={section}
+              si={si}
+              updateSection={updateSection}
+              removeSection={removeSection}
+              updateItem={updateItem}
+              addItem={addItem}
+              removeItem={removeItem}
+              reorderItems={reorderItems}
+            />
           ))}
 
           <Button
@@ -309,7 +288,7 @@ function DetailsEditDialog({
           </Button>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
-        </div>
+        </Reorder.Group>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -326,5 +305,146 @@ function DetailsEditDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function EditSectionCard({
+  section,
+  si,
+  updateSection,
+  removeSection,
+  updateItem,
+  addItem,
+  removeItem,
+  reorderItems,
+}: {
+  section: EditSection
+  si: number
+  updateSection: (si: number, patch: Partial<EditSection>) => void
+  removeSection: (si: number) => void
+  updateItem: (si: number, ii: number, patch: Partial<EditSection["items"][number]>) => void
+  addItem: (si: number) => void
+  removeItem: (si: number, ii: number) => void
+  reorderItems: (si: number, items: EditItem[]) => void
+}) {
+  const dragControls = useDragControls()
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={section}
+      dragListener={false}
+      dragControls={dragControls}
+      className="rounded-xl border border-slate-200 bg-white p-4"
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onPointerDown={(e) => dragControls.start(e)}
+          aria-label="Drag to reorder"
+          className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing"
+        >
+          <GripVertical className="size-4" />
+        </button>
+        <Input
+          value={section.heading}
+          onChange={(e) => updateSection(si, { heading: e.target.value })}
+          placeholder="Heading (e.g. URLs, Credentials, Notes)"
+          className="h-9 font-medium"
+        />
+        <button
+          type="button"
+          onClick={() => removeSection(si)}
+          aria-label="Remove heading"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash2 className="size-4" />
+        </button>
+      </div>
+
+      <Reorder.Group
+        as="div"
+        axis="y"
+        values={section.items}
+        onReorder={(items) => reorderItems(si, items)}
+        className="mt-3 space-y-2"
+      >
+        {section.items.map((item, ii) => (
+          <EditItemRow
+            key={item.id}
+            item={item}
+            si={si}
+            ii={ii}
+            updateItem={updateItem}
+            removeItem={removeItem}
+          />
+        ))}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => addItem(si)}
+          className="gap-1.5"
+        >
+          <Plus className="size-3.5" />
+          Add item
+        </Button>
+      </Reorder.Group>
+    </Reorder.Item>
+  )
+}
+
+function EditItemRow({
+  item,
+  si,
+  ii,
+  updateItem,
+  removeItem,
+}: {
+  item: EditSection["items"][number]
+  si: number
+  ii: number
+  updateItem: (si: number, ii: number, patch: Partial<EditSection["items"][number]>) => void
+  removeItem: (si: number, ii: number) => void
+}) {
+  const dragControls = useDragControls()
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={item}
+      dragListener={false}
+      dragControls={dragControls}
+      className="flex items-center gap-2 bg-white"
+    >
+      <button
+        type="button"
+        onPointerDown={(e) => dragControls.start(e)}
+        aria-label="Drag to reorder"
+        className="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing"
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <Input
+        value={item.label}
+        onChange={(e) => updateItem(si, ii, { label: e.target.value })}
+        placeholder="Label"
+        className="h-9 w-1/3"
+      />
+      <Input
+        value={item.value}
+        onChange={(e) => updateItem(si, ii, { value: e.target.value })}
+        placeholder="Value or https://…"
+        className="h-9 flex-1"
+      />
+      <button
+        type="button"
+        onClick={() => removeItem(si, ii)}
+        aria-label="Remove item"
+        className="flex size-8 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+      >
+        <Trash2 className="size-3.5" />
+      </button>
+    </Reorder.Item>
   )
 }
