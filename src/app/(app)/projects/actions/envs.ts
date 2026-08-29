@@ -66,15 +66,22 @@ export async function createEnvsBulk(
     return { error: "No valid KEY=VALUE lines found." }
   }
 
-  await prisma.envVar.createMany({
-    data: entries.map((e) => ({
-      projectId,
-      key: e.key,
-      value: e.value,
-      tabId,
-      scopeTabId,
-    })),
+  const existing = await prisma.envVar.findMany({
+    where: { projectId, tabId, scopeTabId },
+    select: { id: true, key: true },
   })
+  const existingByKey = new Map(existing.map((e) => [e.key, e.id]))
+
+  await prisma.$transaction(
+    entries.map((e) => {
+      const id = existingByKey.get(e.key)
+      return id
+        ? prisma.envVar.update({ where: { id }, data: { value: e.value } })
+        : prisma.envVar.create({
+            data: { projectId, key: e.key, value: e.value, tabId, scopeTabId },
+          })
+    })
+  )
   await revalidateProject(projectId)
   return { success: true }
 }
