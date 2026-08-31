@@ -41,7 +41,7 @@ type SheetOverlayProps = SheetOverlayPrimitiveProps;
 function SheetOverlay({ className, ...props }: SheetOverlayProps) {
   return (
     <SheetOverlayPrimitive
-      className={cn('fixed inset-0 z-50 bg-black/50', className)}
+      className={cn('fixed inset-0 z-50 bg-overlay supports-backdrop-filter:backdrop-blur-[2px]', className)}
       {...props}
     />
   );
@@ -69,11 +69,11 @@ function SheetContent({
       <SheetOverlay />
       <SheetContentPrimitive
         className={cn(
-          'bg-background fixed z-50 flex flex-col gap-4 shadow-lg',
-          side === 'right' && 'h-full w-[350px] border-l',
-          side === 'left' && 'h-full w-[350px] border-r',
-          side === 'top' && 'w-full h-[350px] border-b',
-          side === 'bottom' && 'w-full h-[350px] border-t',
+          'bg-background fixed z-50 flex flex-col gap-4 shadow-2xl',
+          side === 'right' && 'h-full w-[350px] max-w-[85vw] border-l border-border',
+          side === 'left' && 'h-full w-[350px] max-w-[85vw] border-r border-border',
+          side === 'top' && 'w-full h-[350px] border-b border-border',
+          side === 'bottom' && 'w-full h-[350px] border-t border-border',
           className,
         )}
         side={side}
@@ -81,7 +81,7 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+          <SheetClose className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none">
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>
           </SheetClose>

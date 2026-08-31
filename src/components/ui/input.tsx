@@ -3,13 +3,44 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+/** Shared field chrome, so Input / Textarea / SelectTrigger stay in lockstep. */
+const fieldBase = [
+  "w-full min-w-0 rounded-lg border border-input bg-background text-foreground",
+  "transition-[color,box-shadow,border-color] duration-(--animate-duration-fast) ease-(--ease-standard)",
+  "outline-none focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring",
+  "hover:not-disabled:not-aria-[invalid=true]:border-border-strong",
+  "placeholder:text-muted-foreground",
+  "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground disabled:opacity-70",
+  "aria-invalid:border-destructive aria-invalid:outline-destructive",
+  "read-only:bg-surface-subtle",
+]
+
+const inputSizes = {
+  sm: "h-8 px-2.5 text-xs",
+  default: "h-9 px-3 text-sm",
+  lg: "h-11 px-3.5 text-base",
+} as const
+
+/**
+ * @param inputSize Control density. `default` (36px) matches Button's default
+ *   size, so an input and its adjacent button line up without overrides.
+ */
+function Input({
+  className,
+  type,
+  inputSize = "default",
+  ...props
+}: React.ComponentProps<"input"> & { inputSize?: keyof typeof inputSizes }) {
   return (
     <InputPrimitive
       type={type}
       data-slot="input"
+      data-size={inputSize}
       className={cn(
-        "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        fieldBase,
+        inputSizes[inputSize],
+        // File inputs need their own button chrome.
+        "file:mr-3 file:inline-flex file:h-full file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
         className
       )}
       {...props}
@@ -17,4 +48,4 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   )
 }
 
-export { Input }
+export { Input, fieldBase }

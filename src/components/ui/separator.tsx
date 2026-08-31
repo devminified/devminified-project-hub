@@ -22,4 +22,28 @@ function Separator({
   )
 }
 
-export { Separator }
+/**
+ * A rule with a caption in the middle — for "or", "Archived", and other
+ * in-flow section breaks.
+ */
+function SeparatorLabel({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="separator-label"
+      className={cn(
+        "flex items-center gap-3 text-2xs font-medium tracking-wide text-muted-foreground uppercase",
+        "before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
+export { Separator, SeparatorLabel }

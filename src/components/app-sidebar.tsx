@@ -1,13 +1,18 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Archive, LogOut, Search } from "lucide-react";
+import * as React from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Archive, LogOut, Search } from "lucide-react"
 
-import { cn } from "@/lib/utils";
-import { LibraryFilled, UsersFilled } from "@/components/svgs";
-import { logout } from "@/app/login/actions";
+import { cn } from "@/lib/utils"
+import { LibraryFilled, UsersFilled } from "@/components/svgs"
+import { logout } from "@/app/login/actions"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
+import { ThemeToggle } from "@/components/ui/theme"
 import {
   Sidebar,
   SidebarContent,
@@ -19,128 +24,220 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/animate-ui/components/radix/sidebar";
+  SidebarRail,
+  useSidebar,
+} from "@/components/animate-ui/components/radix/sidebar"
 
 type IconComponent = React.ComponentType<{ className?: string }>
 
-const nav: {
+type NavItemDef = {
   title: string
   href: string
   icon: IconComponent
   match: (p: string) => boolean
   adminOnly: boolean
-}[] = [
+}
+
+/**
+ * Navigation is grouped rather than flat: everyone's day-to-day work sits in
+ * "Workspace", and admin-only surfaces are visually separated so the elevated
+ * scope is obvious.
+ */
+const navGroups: { label: string; items: NavItemDef[] }[] = [
   {
-    title: "Projects",
-    href: "/",
-    icon: LibraryFilled,
-    match: (p: string) => p === "/" || p.startsWith("/projects"),
-    adminOnly: false,
+    label: "Workspace",
+    items: [
+      {
+        title: "Projects",
+        href: "/",
+        icon: LibraryFilled,
+        match: (p) => p === "/" || p.startsWith("/projects"),
+        adminOnly: false,
+      },
+      {
+        title: "Archive",
+        href: "/archive",
+        icon: Archive,
+        match: (p) => p.startsWith("/archive"),
+        adminOnly: false,
+      },
+    ],
   },
   {
-    title: "Archive",
-    href: "/archive",
-    icon: Archive,
-    match: (p: string) => p.startsWith("/archive"),
-    adminOnly: false,
+    label: "Administration",
+    items: [
+      {
+        title: "Users",
+        href: "/users",
+        icon: UsersFilled,
+        match: (p) => p.startsWith("/users"),
+        adminOnly: true,
+      },
+    ],
   },
-  {
-    title: "Users",
-    href: "/users",
-    icon: UsersFilled,
-    match: (p: string) => p.startsWith("/users"),
-    adminOnly: true,
-  },
-];
+]
 
 export function AppSidebar({
   user,
 }: {
-  user: { email: string; name: string | null; role: string };
+  user: { email: string; name: string | null; role: string }
 }) {
-  const pathname = usePathname();
-  const initials = (user.name || user.email).slice(0, 2).toUpperCase();
-  const isAdmin = user.role === "ADMIN";
-  const visibleNav = nav.filter((item) => !item.adminOnly || isAdmin);
+  const pathname = usePathname()
+  const { state, isMobile } = useSidebar()
+  // The mobile drawer is always full width, so only the desktop panel ever
+  // renders the icon-rail treatment.
+  const collapsed = state === "collapsed" && !isMobile
+
+  const initials = (user.name || user.email).slice(0, 2).toUpperCase()
+  const isAdmin = user.role === "ADMIN"
+
+  const groups = navGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.adminOnly || isAdmin) }))
+    .filter((g) => g.items.length > 0)
 
   return (
-    <Sidebar>
-      {/* Logo */}
-      <SidebarHeader className="min-h-19 justify-center border-b border-slate-100 px-4 py-0">
-        <Image
-          src="/devminified-logo.svg"
-          alt="Devminified"
-          width={170}
-          height={44}
-          priority
-          className="h-9 w-auto"
-        />
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      {/* Brand. Collapses to the mark so the rail stays 48px wide. */}
+      <SidebarHeader className="h-(--header-height) justify-center border-b border-sidebar-border px-3 py-0 group-data-[collapsible=icon]:px-0">
+        <Link
+          href="/"
+          aria-label="Devminified Project Hub — home"
+          className="flex items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring group-data-[collapsible=icon]:mx-auto"
+        >
+          {collapsed ? (
+            <Image
+              src="/devminified-favicon.png"
+              alt=""
+              width={28}
+              height={28}
+              priority
+              className="size-7 rounded-md"
+            />
+          ) : (
+            <Image
+              src="/devminified-logo.svg"
+              alt="Devminified"
+              width={170}
+              height={44}
+              priority
+              className="h-8 w-auto self-start"
+            />
+          )}
+        </Link>
       </SidebarHeader>
 
-      {/* Search (visual quick-search affordance) */}
-      <div className="px-3 pt-2.5">
-        <button
-          type="button"
-          className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-slate-300"
-        >
-          <Search className="size-3.5 shrink-0 text-slate-400" />
-          <span className="flex-1 text-sm text-slate-400">Quick search…</span>
-          <kbd className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
+      <SidebarContent className="gap-0 px-2 py-3 group-data-[collapsible=icon]:px-1.5">
+        {/* Quick search. A visual affordance today; the ⌘K hint tells users
+            where it will live once wired up. */}
+        <div className="pb-2">
+          {collapsed ? (
+            <SidebarMenuButton
+              tooltip="Quick search  ⌘K"
+              className="h-9 justify-center rounded-lg"
+            >
+              <Search className="size-4" />
+              <span className="sr-only">Quick search</span>
+            </SidebarMenuButton>
+          ) : (
+            <button
+              type="button"
+              className={cn(
+                "flex h-9 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-2.5 text-left",
+                "transition-colors duration-(--animate-duration-fast)",
+                "hover:border-border-strong hover:bg-sidebar-accent/70",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
+              )}
+            >
+              <Search className="size-4 shrink-0 text-muted-foreground" />
+              <span className="flex-1 truncate text-sm text-muted-foreground">
+                Quick search…
+              </span>
+              <Kbd className="border-sidebar-border">⌘K</Kbd>
+            </button>
+          )}
+        </div>
 
-      <SidebarContent className="px-2 pt-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-xs font-bold uppercase tracking-wider text-slate-400">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {visibleNav.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.title}
-                  active={item.match(pathname)}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {groups.map((group) => (
+          <SidebarGroup key={group.label} className="px-0 py-1">
+            <SidebarGroupLabel className="px-2 text-2xs font-semibold tracking-wider text-muted-foreground uppercase">
+              {group.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-0.5">
+                {group.items.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.title}
+                    active={item.match(pathname)}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-100">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-slate-50">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--brand-primary)] to-[#7c3aed] text-xs font-semibold text-white shadow-sm shadow-indigo-500/25">
-            {initials}
+      <SidebarFooter className="gap-2 border-t border-sidebar-border p-2">
+        {/* Signed-in identity + the two account-level controls. Collapsed, the
+            row becomes a single avatar and the actions move under it. */}
+        <div
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg p-1.5",
+            collapsed && "flex-col gap-1 p-0"
+          )}
+        >
+          <Avatar size={collapsed ? "default" : "lg"} className="shrink-0">
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {user.name || "Member"}
+              </p>
+              <p className="truncate text-2xs text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          )}
+
+          <div className={cn("flex shrink-0 items-center gap-0.5", collapsed && "flex-col")}>
+            <ThemeToggle />
+            <form action={logout}>
+              <Button
+                type="submit"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Sign out"
+                title="Sign out"
+                className="text-muted-foreground hover:bg-destructive-subtle hover:text-destructive-subtle-foreground"
+              >
+                <LogOut />
+              </Button>
+            </form>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-900">
-              {user.name || "Member"}
-            </p>
-            <p className="truncate text-xs text-slate-400">{user.email}</p>
-          </div>
-          <form action={logout}>
-            <button
-              type="submit"
-              aria-label="Sign out"
-              className="flex size-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-primary)]"
-            >
-              <LogOut className="size-4" />
-            </button>
-          </form>
         </div>
+
+        {!collapsed && (
+          <p className="px-1.5 text-2xs text-muted-foreground/70">
+            {isAdmin ? "Administrator" : "Member"}
+          </p>
+        )}
       </SidebarFooter>
+
+      {/* Drag/click strip on the panel edge — a second, mouse-friendly way to
+          collapse that doesn't require finding the header button. */}
+      <SidebarRail />
     </Sidebar>
-  );
+  )
 }
 
 /**
- * Sidebar nav row with a colored icon tile (solid blue when active). When
- * `href` is omitted the row is a non-navigating placeholder (Settings / Help).
+ * A nav row. The active item gets three redundant cues — tinted pill, solid
+ * icon tile, and a left accent bar — so it survives both colour-blindness and
+ * the icon-only rail.
  */
 function NavItem({
   href,
@@ -148,38 +245,41 @@ function NavItem({
   label,
   active = false,
 }: {
-  href?: string;
-  icon: IconComponent;
-  label: string;
-  active?: boolean;
+  href: string
+  icon: IconComponent
+  label: string
+  active?: boolean
 }) {
-  const inner = (
-    <>
-      <span
-        className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors",
-          active
-            ? "bg-[var(--brand-primary)] text-white"
-            : "bg-slate-100 text-slate-500"
-        )}
-      >
-        <Icon className="size-4" />
-      </span>
-      <span>{label}</span>
-    </>
-  );
-
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        asChild={Boolean(href)}
-        size="lg"
+        asChild
         isActive={active}
         tooltip={label}
-        className="h-11 rounded-xl text-[15px] font-semibold"
+        className={cn(
+          "h-10 gap-2.5 rounded-lg px-2 text-sm font-medium",
+          "group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!",
+          // Left accent bar, only when active and only in the expanded panel.
+          "before:absolute before:inset-y-1.5 before:-left-2 before:w-0.5 before:rounded-r-full before:bg-primary before:opacity-0 before:transition-opacity",
+          "group-data-[collapsible=icon]:before:hidden",
+          active && "before:opacity-100"
+        )}
       >
-        {href ? <Link href={href}>{inner}</Link> : <button type="button">{inner}</button>}
+        <Link href={href} aria-current={active ? "page" : undefined}>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex size-7 shrink-0 items-center justify-center rounded-md transition-colors duration-(--animate-duration-fast)",
+              active
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "bg-surface-muted text-muted-foreground"
+            )}
+          >
+            <Icon className="size-4" />
+          </span>
+          <span className="truncate">{label}</span>
+        </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
-  );
+  )
 }
