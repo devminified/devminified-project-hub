@@ -166,10 +166,12 @@ export function TabField({
   /** Form field name — use "scopeTabId" for the env scope dimension. */
   name?: string
 }) {
+  const items = { none: "None", ...Object.fromEntries(tabs.map((t) => [t.id, t.name])) }
+
   return (
     <div className="space-y-1.5">
       <Label htmlFor={name}>{label}</Label>
-      <Select name={name} defaultValue={defaultValue ?? "none"}>
+      <Select name={name} defaultValue={defaultValue ?? "none"} items={items}>
         <SelectTrigger id={name} className="h-10 w-full">
           <SelectValue />
         </SelectTrigger>

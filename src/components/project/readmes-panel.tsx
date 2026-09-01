@@ -303,7 +303,11 @@ function UploadReadmesDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-1.5">
             <Label>Tab</Label>
-            <Select value={tabId} onValueChange={(v) => setTabId(v ?? "none")}>
+            <Select
+              value={tabId}
+              onValueChange={(v) => setTabId(v ?? "none")}
+              items={{ none: "None", ...Object.fromEntries(tabs.map((t) => [t.id, t.name])) }}
+            >
               <SelectTrigger className="h-10 w-full">
                 <SelectValue />
               </SelectTrigger>
