@@ -220,8 +220,8 @@ function BulkEnvDialog({
             <DialogTitle>Paste .env</DialogTitle>
             <DialogDescription>
               Paste a full .env block — one KEY=VALUE per line. Blank lines and
-              # comments are ignored. All variables are added to the selected
-              scope.
+              # comments are ignored. Keys that already exist in the selected
+              scope are updated in place; new keys are added.
             </DialogDescription>
           </DialogHeader>
           <input type="hidden" name="projectId" value={projectId} />
@@ -286,7 +286,11 @@ function EnvDialog({
         <form action={formAction}>
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit variable" : "Add variable"}</DialogTitle>
-            <DialogDescription>Environment variable for this project.</DialogDescription>
+            <DialogDescription>
+              {isEdit
+                ? "Environment variable for this project."
+                : "Environment variable for this project. A key that already exists in the chosen tab and scope is updated instead of duplicated."}
+            </DialogDescription>
           </DialogHeader>
           {isEdit ? (
             <input type="hidden" name="id" value={env!.id} />
