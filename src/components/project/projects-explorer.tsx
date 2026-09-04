@@ -42,13 +42,13 @@ export function ProjectsExplorer({
   return (
     <div className="space-y-6">
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--brand-cyan)]" />
         <Input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={searchPlaceholder}
-          className="h-11 pl-9"
+          className="h-11 rounded-full border-indigo-100 bg-white/80 pl-10 shadow-sm shadow-indigo-500/[0.05] focus-visible:border-blue-200"
         />
       </div>
 

@@ -39,7 +39,7 @@ export default async function ProjectDetailPage({
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
+    <div className="min-h-full bg-gradient-to-b from-indigo-50/70 via-slate-50 to-cyan-50/40">
       <ProjectTopBar summary={summary} />
       <ProjectHero summary={summary} isAdmin={isAdmin} active={active} />
       <main className="px-6 py-6 lg:px-8">

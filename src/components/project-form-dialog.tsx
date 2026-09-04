@@ -221,7 +221,7 @@ export function ProjectCreateButton() {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="h-11 gap-2 rounded-xl bg-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-sm shadow-indigo-500/20 transition-colors hover:bg-[var(--brand-primary)]/90"
+        className="h-11 gap-2 rounded-xl bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-md shadow-blue-500/25 transition-all hover:shadow-lg hover:shadow-blue-500/30"
       >
         <Plus className="size-5" />
         New project

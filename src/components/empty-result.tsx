@@ -25,7 +25,7 @@ export function EmptyResult({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/40 px-6 py-10 text-center",
+        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-indigo-200 bg-gradient-to-b from-white/60 to-indigo-50/40 px-6 py-10 text-center",
         className
       )}
     >

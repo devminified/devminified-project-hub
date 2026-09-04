@@ -138,7 +138,7 @@ export function UsersManager({
     <div>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h1 className="bg-gradient-to-r from-slate-900 via-[var(--brand-primary)] to-[var(--brand-blue)] bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
             Team members
           </h1>
           <p className="mt-2 text-sm text-slate-500">
@@ -148,7 +148,7 @@ export function UsersManager({
         </div>
         <Button
           onClick={openCreate}
-          className="h-11 gap-2 rounded-xl bg-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-sm shadow-indigo-500/20 transition-colors hover:bg-[var(--brand-primary)]/90"
+          className="h-11 gap-2 rounded-xl bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-primary)] px-6 text-base font-semibold text-white shadow-md shadow-blue-500/25 transition-all hover:shadow-lg hover:shadow-blue-500/30"
         >
           <Plus className="size-5" />
           Add user
@@ -208,7 +208,8 @@ export function UsersManager({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-lg shadow-indigo-500/[0.07]">
+        <div className="h-1 bg-gradient-to-r from-[var(--brand-blue)] via-[var(--brand-cyan)] to-violet-500" />
         <Table>
           <TableHeader className="bg-slate-50/80">
             <TableRow className="border-slate-200 hover:bg-transparent">

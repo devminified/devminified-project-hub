@@ -82,7 +82,8 @@ export async function ActivePanel({
 /** Skeleton shown while a tab's data streams in. */
 export function PanelSkeleton() {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-lg shadow-indigo-500/[0.07]">
+      <div className="h-1 bg-gradient-to-r from-[var(--brand-blue)] via-[var(--brand-cyan)] to-violet-500" />
       <div className="border-b border-slate-100 px-5 py-4">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="mt-2 h-3 w-64" />

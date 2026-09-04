@@ -18,8 +18,9 @@ export function Panel({
   children: React.ReactNode
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <section className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-lg shadow-indigo-500/[0.07]">
+      <div className="h-1 bg-gradient-to-r from-[var(--brand-blue)] via-[var(--brand-cyan)] to-violet-500" />
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-gradient-to-r from-[var(--brand-primary)]/[0.04] to-transparent px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             {title}
@@ -48,7 +49,7 @@ export function AddButton({
     <Button
       size="sm"
       onClick={onClick}
-      className="gap-1.5 bg-[var(--brand-primary)] text-white"
+      className="gap-1.5 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-primary)] text-white shadow-md shadow-blue-500/25"
     >
       <Plus className="size-3.5" />
       {label}

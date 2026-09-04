@@ -35,7 +35,7 @@ export function ProjectWorkspace({
   const visibleFolders = folders.filter((f) => !f.adminOnly || isAdmin)
 
   return (
-    <div className="-mb-px flex gap-1 overflow-x-auto">
+    <div className="flex gap-2 overflow-x-auto pb-5">
       {visibleFolders.map((folder) => {
         const Icon = folder.icon
         const isActive = active === folder.key
@@ -48,10 +48,10 @@ export function ProjectWorkspace({
             scroll={false}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors",
+              "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all",
               isActive
-                ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
+                ? "bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-primary)] text-white shadow-md shadow-blue-500/30"
+                : "bg-white/70 text-slate-500 ring-1 ring-inset ring-slate-200 hover:text-[var(--brand-primary)] hover:ring-blue-200"
             )}
           >
             <TabIcon icon={Icon} />
@@ -61,7 +61,7 @@ export function ProjectWorkspace({
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[11px] font-bold",
                   isActive
-                    ? "bg-indigo-100 text-indigo-700"
+                    ? "bg-white/25 text-white"
                     : "bg-slate-100 text-slate-500"
                 )}
               >
