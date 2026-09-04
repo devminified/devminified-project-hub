@@ -2,10 +2,13 @@ import { Suspense } from "react"
 import { notFound } from "next/navigation"
 
 import { canViewProject, getProjectSummary } from "@/lib/projects/queries"
-import { normalizeTab } from "@/lib/projects/utils"
+import { normalizeTab, projectImageSrc, projectInitial } from "@/lib/projects/utils"
 import { getCurrentUser, isProjectDev } from "@/lib/dal"
-import { ProjectTopBar } from "@/components/project/project-top-bar"
+import { PageContainer, PageHeader } from "@/components/ui/page-header"
+import { ProjectActions } from "@/components/project-form-dialog"
+import { ManageDevsButton } from "@/components/project/manage-devs-dialog"
 import { ProjectHero } from "@/components/project/project-hero"
+import { ProjectWorkspace } from "@/components/project/workspace"
 import { ActivePanel, PanelSkeleton } from "@/components/project/active-panel"
 
 export default async function ProjectDetailPage({
@@ -38,20 +41,69 @@ export default async function ProjectDetailPage({
     notFound()
   }
 
+  // Optimized avatar src for display; summary.imageUrl (original) is still
+  // passed to the edit form below so editing preserves the stored value.
+  const avatarSrc = projectImageSrc(
+    summary.imageUrl,
+    summary.slug,
+    summary.updatedAt,
+    72
+  )
+
   return (
-    <div className="min-h-full bg-slate-50">
-      <ProjectTopBar summary={summary} />
-      <ProjectHero summary={summary} isAdmin={isAdmin} active={active} />
-      <main className="px-6 py-6 lg:px-8">
-        <Suspense key={active} fallback={<PanelSkeleton />}>
-          <ActivePanel
-            active={active}
-            summary={summary}
-            isAdmin={isAdmin}
-            canEdit={canEdit}
-          />
-        </Suspense>
-      </main>
+    <div className="min-h-full">
+      <PageHeader
+        title={summary.name}
+        description={`Updated ${summary.updatedAt}`}
+        breadcrumb={[{ label: "Projects", href: "/" }, { label: summary.name }]}
+        icon={
+          avatarSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarSrc}
+              alt=""
+              className="size-9 rounded-lg object-cover"
+            />
+          ) : (
+            <span className="text-sm font-semibold">
+              {projectInitial(summary.name)}
+            </span>
+          )
+        }
+        actions={
+          isAdmin && (
+            <>
+              <ManageDevsButton projectId={summary.id} />
+              <ProjectActions
+                project={{
+                  id: summary.id,
+                  name: summary.name,
+                  description: summary.description,
+                  status: summary.status,
+                  archived: summary.archived,
+                  tags: summary.tags,
+                  imageUrl: summary.imageUrl,
+                }}
+              />
+            </>
+          )
+        }
+      />
+
+      <PageContainer className="flex flex-col gap-6">
+        <ProjectHero summary={summary} />
+        <div className="flex flex-col gap-4">
+          <ProjectWorkspace summary={summary} active={active} isAdmin={isAdmin} />
+          <Suspense key={active} fallback={<PanelSkeleton />}>
+            <ActivePanel
+              active={active}
+              summary={summary}
+              isAdmin={isAdmin}
+              canEdit={canEdit}
+            />
+          </Suspense>
+        </div>
+      </PageContainer>
     </div>
   )
 }

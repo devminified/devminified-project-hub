@@ -6,6 +6,7 @@ import {
   getProjectTabs,
 } from "@/lib/projects/queries"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DetailsPanel } from "./details-panel"
 import { DocsPanel } from "./docs-panel"
@@ -82,16 +83,16 @@ export async function ActivePanel({
 /** Skeleton shown while a tab's data streams in. */
 export function PanelSkeleton() {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="mt-2 h-3 w-64" />
-      </div>
-      <div className="space-y-3 p-5">
+    <Card variant="elevated">
+      <CardHeader className="border-b">
+        <Skeleton shape="text" className="w-40" />
+        <Skeleton shape="text" className="w-64 text-xs" />
+      </CardHeader>
+      <CardContent className="space-y-3">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-3/4" />
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

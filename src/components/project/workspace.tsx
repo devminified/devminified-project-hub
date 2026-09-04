@@ -1,10 +1,13 @@
 "use client"
 
-import Link, { useLinkStatus } from "next/link"
-import { BookOpen, FileText, KeyRound, LayoutList, Loader2, Lock } from "lucide-react"
+import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { BookOpen, FileText, KeyRound, LayoutList, Lock } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import type { ProjectSummary, TabKey } from "@/lib/projects/types"
+import { Badge } from "@/components/ui/badge"
+import { Spinner } from "@/components/ui/spinner"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const folders: { key: TabKey; label: string; icon: typeof KeyRound; adminOnly?: boolean }[] = [
   { key: "details", label: "Details", icon: LayoutList },
@@ -18,9 +21,11 @@ const folders: { key: TabKey; label: string; icon: typeof KeyRound; adminOnly?: 
 const COUNTED_TABS = ["envs", "docs", "readmes"] as const
 
 /**
- * Underline-style tab bar for the project detail page. Each tab is a <Link>
- * that sets `?tab=`, so navigating fetches only that tab's data on the server.
- * The clicked tab shows a spinner while its navigation is pending.
+ * Tab bar for the project detail page, on the shared <Tabs> line variant.
+ * The value is controlled by the `?tab=` search param: selecting a tab
+ * navigates, so the server fetches only that tab's data, and the trigger
+ * shows a spinner while its navigation is pending. Content renders outside
+ * the Tabs tree (server-side), so there are no <TabsContent> children here.
  */
 export function ProjectWorkspace({
   summary,
@@ -31,56 +36,44 @@ export function ProjectWorkspace({
   active: TabKey
   isAdmin: boolean
 }) {
+  const router = useRouter()
+  const [pending, startNavigate] = useTransition()
+  const [target, setTarget] = useState<TabKey | null>(null)
+
   const counts = summary.counts
   const visibleFolders = folders.filter((f) => !f.adminOnly || isAdmin)
 
-  return (
-    <div className="-mb-px flex gap-1 overflow-x-auto">
-      {visibleFolders.map((folder) => {
-        const Icon = folder.icon
-        const isActive = active === folder.key
-        const isCounted = (COUNTED_TABS as readonly TabKey[]).includes(folder.key)
-        const count = isCounted ? counts[folder.key as keyof typeof counts] : null
-        return (
-          <Link
-            key={folder.key}
-            href={`/projects/${summary.slug}?tab=${folder.key}`}
-            scroll={false}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-colors",
-              isActive
-                ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            )}
-          >
-            <TabIcon icon={Icon} />
-            {folder.label}
-            {count !== null && (
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[11px] font-bold",
-                  isActive
-                    ? "bg-indigo-100 text-indigo-700"
-                    : "bg-slate-100 text-slate-500"
-                )}
-              >
-                {count}
-              </span>
-            )}
-          </Link>
-        )
-      })}
-    </div>
-  )
-}
+  function handleValueChange(next: string) {
+    setTarget(next as TabKey)
+    startNavigate(() => {
+      router.push(`/projects/${summary.slug}?tab=${next}`, { scroll: false })
+    })
+  }
 
-/** Shows the tab's icon, swapping to a spinner while its <Link> navigation is pending. */
-function TabIcon({ icon: Icon }: { icon: typeof KeyRound }) {
-  const { pending } = useLinkStatus()
-  return pending ? (
-    <Loader2 className="size-4 animate-spin" />
-  ) : (
-    <Icon className="size-4" />
+  return (
+    <Tabs value={active} onValueChange={handleValueChange} variant="line">
+      <TabsList>
+        {visibleFolders.map((folder) => {
+          const Icon = folder.icon
+          const isCounted = (COUNTED_TABS as readonly TabKey[]).includes(folder.key)
+          const count = isCounted ? counts[folder.key as keyof typeof counts] : null
+          const isLoading = pending && target === folder.key
+          return (
+            <TabsTrigger key={folder.key} value={folder.key}>
+              {isLoading ? <Spinner /> : <Icon />}
+              {folder.label}
+              {count !== null && (
+                <Badge
+                  variant={active === folder.key ? "info" : "muted"}
+                  size="sm"
+                >
+                  {count}
+                </Badge>
+              )}
+            </TabsTrigger>
+          )
+        })}
+      </TabsList>
+    </Tabs>
   )
 }

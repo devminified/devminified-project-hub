@@ -1,138 +1,67 @@
 import { BookOpen, FileText, KeyRound, Users } from "lucide-react"
 
-import type { ProjectSummary, TabKey } from "@/lib/projects/types"
-import { projectImageSrc, projectInitial } from "@/lib/projects/utils"
+import type { ProjectSummary } from "@/lib/projects/types"
 import { StatusBadge } from "@/components/status-badge"
-import { ProjectActions } from "@/components/project-form-dialog"
-import { ProjectWorkspace } from "@/components/project/workspace"
-import { ManageDevsButton } from "@/components/project/manage-devs-dialog"
+import { Badge, BadgeDot } from "@/components/ui/badge"
+import { StatTile, StatTileGroup } from "@/components/ui/stat-tile"
 
-/** Project detail hero: avatar/image, name + status + description, actions, stat cards, tabs. */
-export function ProjectHero({
-  summary,
-  isAdmin,
-  active,
-}: {
-  summary: ProjectSummary
-  isAdmin: boolean
-  active: TabKey
-}) {
-  // Optimized avatar src for display; summary.imageUrl (original) is still
-  // passed to the edit form below so editing preserves the stored value.
-  const heroImageSrc = projectImageSrc(
-    summary.imageUrl,
-    summary.slug,
-    summary.updatedAt,
-    120
-  )
+/**
+ * Summary block under the project page header: status/archived badges, tag
+ * chips, description, and the stat tile row. Identity (name, avatar, actions)
+ * lives in the page's <PageHeader>.
+ */
+export function ProjectHero({ summary }: { summary: ProjectSummary }) {
+  const counts = summary.counts
   return (
-    <div className="relative overflow-hidden border-b border-slate-200 bg-white">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)]/[0.06] via-blue-500/[0.03] to-transparent" />
-      <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-[var(--brand-primary)]/10 blur-3xl" />
-
-      <div className="relative px-6 pt-7 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="flex size-15 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-[var(--brand-primary)] to-[#1338be] text-2xl font-extrabold tracking-tight text-white shadow-lg shadow-indigo-500/30">
-              {heroImageSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={heroImageSrc}
-                  alt={summary.name}
-                  className="size-full object-cover"
-                />
-              ) : (
-                projectInitial(summary.name)
-              )}
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-                  {summary.name}
-                </h1>
-                <StatusBadge status={summary.status} />
-                {summary.archived && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200">
-                    <span className="size-1.5 rounded-full bg-slate-400" />
-                    Archived
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          {isAdmin && (
-            <div className="flex flex-wrap items-center gap-2">
-              <ManageDevsButton projectId={summary.id} />
-              <ProjectActions
-                project={{
-                  id: summary.id,
-                  name: summary.name,
-                  description: summary.description,
-                  status: summary.status,
-                  archived: summary.archived,
-                  tags: summary.tags,
-                  imageUrl: summary.imageUrl,
-                }}
-              />
-            </div>
+    <section className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge status={summary.status} />
+          {summary.archived && (
+            <Badge variant="muted">
+              <BadgeDot />
+              Archived
+            </Badge>
           )}
+          {summary.tags.map((tag, i) => (
+            <Badge key={`${tag}-${i}`} variant="muted">
+              {tag}
+            </Badge>
+          ))}
         </div>
-
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-          <StatCard
-            icon={KeyRound}
-            tint="bg-blue-100 text-blue-700"
-            value={summary.counts.envs}
-            label="Variables"
-          />
-          <StatCard
-            icon={FileText}
-            tint="bg-violet-100 text-violet-700"
-            value={summary.counts.docs}
-            label="Documents"
-          />
-          <StatCard
-            icon={BookOpen}
-            tint="bg-amber-100 text-amber-700"
-            value={summary.counts.readmes}
-            label="READMEs"
-          />
-          <StatCard
-            icon={Users}
-            tint="bg-emerald-100 text-emerald-700"
-            value={summary.counts.members}
-            label={summary.counts.members === 1 ? "Member" : "Members"}
-          />
-        </div>
-
-        <ProjectWorkspace summary={summary} active={active} isAdmin={isAdmin} />
+        {summary.description && (
+          <p className="max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
+            {summary.description}
+          </p>
+        )}
       </div>
-    </div>
-  )
-}
 
-function StatCard({
-  icon: Icon,
-  tint,
-  value,
-  label,
-}: {
-  icon: typeof KeyRound
-  tint: string
-  value: number
-  label: string
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md sm:min-w-40">
-      <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${tint}`}>
-        <Icon className="size-4" />
-      </div>
-      <div>
-        <div className="text-lg font-extrabold leading-none tracking-tight text-slate-900">
-          {value}
-        </div>
-        <div className="mt-1 text-xs font-medium text-slate-500">{label}</div>
-      </div>
-    </div>
+      <StatTileGroup>
+        <StatTile
+          icon={<KeyRound />}
+          tone="brand"
+          value={counts.envs}
+          label="Variables"
+        />
+        <StatTile
+          icon={<FileText />}
+          tone="info"
+          value={counts.docs}
+          label="Documents"
+        />
+        <StatTile
+          icon={<BookOpen />}
+          tone="warning"
+          value={counts.readmes}
+          label="READMEs"
+        />
+        <StatTile
+          icon={<Users />}
+          tone="success"
+          value={counts.members}
+          label={counts.members === 1 ? "Member" : "Members"}
+        />
+      </StatTileGroup>
+    </section>
   )
 }

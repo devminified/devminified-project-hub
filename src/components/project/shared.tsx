@@ -3,7 +3,15 @@
 import { Pencil, Plus, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { EmptyResult } from "@/components/empty-result"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { EmptyState as EmptyStatePrimitive } from "@/components/ui/empty-state"
 
 /** Card shell with a titled header and an optional header action slot. */
 export function Panel({
@@ -18,23 +26,19 @@ export function Panel({
   children: React.ReactNode
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <div className="min-w-0">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            {title}
-          </h2>
-          <p className="text-sm text-slate-500">{description}</p>
-        </div>
-        {action && <div className="shrink-0">{action}</div>}
-      </div>
-      <div className="min-w-0 p-5">{children}</div>
-    </section>
+    <Card variant="elevated">
+      <CardHeader className="border-b">
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+        {action && <CardAction>{action}</CardAction>}
+      </CardHeader>
+      <CardContent className="min-w-0">{children}</CardContent>
+    </Card>
   )
 }
 
 export function EmptyState({ message }: { message: string }) {
-  return <EmptyResult title={message} size="sm" />
+  return <EmptyStatePrimitive title={message} size="sm" />
 }
 
 export function AddButton({
@@ -45,12 +49,8 @@ export function AddButton({
   label: string
 }) {
   return (
-    <Button
-      size="sm"
-      onClick={onClick}
-      className="gap-1.5 bg-[var(--brand-primary)] text-white"
-    >
-      <Plus className="size-3.5" />
+    <Button size="sm" onClick={onClick}>
+      <Plus />
       {label}
     </Button>
   )
@@ -65,22 +65,24 @@ export function RowActions({
 }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-xs"
         onClick={onEdit}
         aria-label="Edit"
-        className="flex size-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-blue)]"
+        className="text-muted-foreground hover:text-foreground"
       >
-        <Pencil className="size-3.5" />
-      </button>
-      <button
-        type="button"
+        <Pencil />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-xs"
         onClick={onDelete}
         aria-label="Delete"
-        className="flex size-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+        className="text-muted-foreground hover:bg-destructive-subtle hover:text-destructive-subtle-foreground"
       >
-        <Trash2 className="size-3.5" />
-      </button>
+        <Trash2 />
+      </Button>
     </div>
   )
 }
