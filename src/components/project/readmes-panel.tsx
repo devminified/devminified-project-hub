@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Code2, Eye, ScrollText, Upload } from "lucide-react"
+import { ChevronRight, Code2, Eye, ScrollText, Upload } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { ProjectTab, ReadmeRecord } from "@/lib/projects/types"
@@ -168,17 +168,32 @@ function ReadmeCard({
   onDelete: () => void
 }) {
   const [raw, setRaw] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const isFile = Boolean(readme.fileUrl)
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <ScrollText className="size-4 text-blue-500" />
-          <span className="font-mono text-xs font-medium text-slate-700">{readme.title}</span>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-label={expanded ? "Collapse" : "Expand"}
+          className="flex min-w-0 items-center gap-2 text-left"
+        >
+          <ChevronRight
+            className={cn(
+              "size-3.5 shrink-0 text-slate-400 transition-transform duration-200",
+              expanded && "rotate-90"
+            )}
+          />
+          <ScrollText className="size-4 shrink-0 text-blue-500" />
+          <span className="truncate font-mono text-xs font-medium text-slate-700">
+            {readme.title}
+          </span>
           <TabBadge tab={tab} />
-        </div>
-        <div className="flex items-center gap-1">
+        </button>
+        <div className="flex shrink-0 items-center gap-1">
           {isFile ? (
             <FileOpenButton
               href={fileLinks("readme", readme.id, readme.fileUrl!, readme.fileType, readme.title).open}
@@ -208,30 +223,31 @@ function ReadmeCard({
           {canEdit && <RowActions onEdit={onEdit} onDelete={onDelete} />}
         </div>
       </div>
-      {isFile ? (
-        <div className="p-4">
-          <FilePreview
-            kind="readme"
-            id={readme.id}
-            fileUrl={readme.fileUrl!}
-            fileType={readme.fileType}
-            title={readme.title}
-            className="h-[70vh]"
-          />
-        </div>
-      ) : raw ? (
-        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-slate-700">
-          {readme.content}
-        </pre>
-      ) : readme.content.trim() ? (
-        <div className="px-5 py-4">
-          <Markdown>{readme.content}</Markdown>
-        </div>
-      ) : (
-        <p className="px-5 py-8 text-center text-sm text-slate-400">
-          This readme is empty. Edit it to add content.
-        </p>
-      )}
+      {expanded &&
+        (isFile ? (
+          <div className="p-4">
+            <FilePreview
+              kind="readme"
+              id={readme.id}
+              fileUrl={readme.fileUrl!}
+              fileType={readme.fileType}
+              title={readme.title}
+              className="h-[70vh]"
+            />
+          </div>
+        ) : raw ? (
+          <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-slate-700">
+            {readme.content}
+          </pre>
+        ) : readme.content.trim() ? (
+          <div className="px-5 py-4">
+            <Markdown>{readme.content}</Markdown>
+          </div>
+        ) : (
+          <p className="px-5 py-8 text-center text-sm text-slate-400">
+            This readme is empty. Edit it to add content.
+          </p>
+        ))}
     </div>
   )
 }

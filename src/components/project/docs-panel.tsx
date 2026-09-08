@@ -112,68 +112,23 @@ export function DocsPanel({
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {filtered.map((doc) => (
-            <div
+            <DocEntry
               key={doc.id}
-              className="group flex items-start gap-3 rounded-lg border border-slate-200 p-4 transition-all hover:border-blue-300 hover:bg-blue-50/40"
-            >
-              <button
-                type="button"
-                onClick={() => setView(doc)}
-                className="flex min-w-0 flex-1 items-start gap-3 text-left"
-              >
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-                  <FileText className="size-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-slate-800 group-hover:text-[var(--brand-blue)]">
-                      {doc.title}
-                    </p>
-                    <TabBadge tab={doc.tabId ? byId.get(doc.tabId) : undefined} />
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
-                  {doc.fileUrl
-                    ? fileKind(doc.title, doc.fileType) === "pdf"
-                      ? "PDF document"
-                      : "Word document"
-                    : doc.description}
-                </p>
-                  <p className="mt-2 text-xs text-slate-400">Updated {doc.updatedAt}</p>
-                </div>
-              </button>
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    doc.fileUrl
-                      ? window.open(
-                          fileLinks("doc", doc.id, doc.fileUrl, doc.fileType, doc.title).open,
-                          "_blank",
-                          "noopener,noreferrer"
-                        )
-                      : downloadText(doc.title, doc.description)
-                  }
-                  aria-label="Download"
-                  className="flex size-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-blue)]"
-                >
-                  <Download className="size-3.5" />
-                </button>
-                {canEdit && (
-                  <RowActions
-                    onEdit={() => setDialog({ open: true, doc })}
-                    onDelete={async () => {
-                      const ok = await confirm({
-                        title: "Delete document?",
-                        description: `Delete "${doc.title}"? This can't be undone.`,
-                        confirmLabel: "Delete",
-                        destructive: true,
-                      })
-                      if (ok) startDelete(() => deleteDoc(doc.id).then(() => {}))
-                    }}
-                  />
-                )}
-              </div>
-            </div>
+              doc={doc}
+              tab={doc.tabId ? byId.get(doc.tabId) : undefined}
+              canEdit={canEdit}
+              onView={() => setView(doc)}
+              onEdit={() => setDialog({ open: true, doc })}
+              onDelete={async () => {
+                const ok = await confirm({
+                  title: "Delete document?",
+                  description: `Delete "${doc.title}"? This can't be undone.`,
+                  confirmLabel: "Delete",
+                  destructive: true,
+                })
+                if (ok) startDelete(() => deleteDoc(doc.id).then(() => {}))
+              }}
+            />
           ))}
         </div>
       )}
@@ -201,6 +156,76 @@ export function DocsPanel({
       {confirmDialog}
     </Panel>
   )
+}
+
+function DocEntry({
+  doc,
+  tab,
+  canEdit,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  doc: DocRecord;
+  tab: ProjectTab | undefined;
+  canEdit: boolean;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const isMarkdown = !Boolean(doc.fileUrl) && isMarkdownFile(doc.title);
+
+  return (
+    <div className="group flex items-start gap-3 rounded-lg border border-slate-200 p-4 transition-all hover:border-blue-300 hover:bg-blue-50/40">
+      <button
+        type="button"
+        onClick={onView}
+        className="flex min-w-0 flex-1 items-start gap-3 text-left"
+      >
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+          <FileText className="size-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-medium text-slate-800 group-hover:text-[var(--brand-blue)]">
+              {doc.title}
+            </p>
+            <TabBadge tab={tab} />
+          </div>
+          <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+            {doc.fileUrl
+              ? fileKind(doc.title, doc.fileType) === "pdf"
+                ? "PDF document"
+                : "Word document"
+              : isMarkdown
+                ? "Markdown document"
+                : doc.description}
+          </p>
+          <p className="mt-2 text-xs text-slate-400">Updated {doc.updatedAt}</p>
+        </div>
+      </button>
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={() =>
+            doc.fileUrl
+              ? window.open(
+                  fileLinks("doc", doc.id, doc.fileUrl, doc.fileType, doc.title)
+                    .open,
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              : downloadText(doc.title, doc.description)
+          }
+          aria-label="Download"
+          className="flex size-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-[var(--brand-blue)]"
+        >
+          <Download className="size-3.5" />
+        </button>
+        {canEdit && <RowActions onEdit={onEdit} onDelete={onDelete} />}
+      </div>
+    </div>
+  );
 }
 
 function DocViewDialog({
