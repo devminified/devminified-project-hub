@@ -33,8 +33,28 @@ model User {
   // Per-project "dev" grants: lets this user edit a specific project's tab
   // content (details/envs/docs/readmes) without being a global admin.
   devRoles     ProjectDev[]
+  // Personal access tokens for authenticating MCP/API requests as this user.
+  apiTokens    ApiToken[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+/**
+ * A personal access token used to authenticate MCP/API requests. Only the
+ * SHA-256 hash of the token is stored — the raw value is shown once, at
+ * creation time, and never persisted or logged.
+ */
+model ApiToken {
+  id         String    @id @default(cuid())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  name       String
+  tokenHash  String    @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId])
 }
 
 enum ProjectStatus {
