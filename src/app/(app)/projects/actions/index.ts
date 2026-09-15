@@ -10,7 +10,13 @@ export {
   setProjectArchived,
   deleteProject,
 } from "./projects"
-export { createEnv, createEnvsBulk, updateEnv, deleteEnv } from "./envs"
+export {
+  createEnv,
+  createEnvsBulk,
+  updateEnv,
+  deleteEnv,
+  deleteEnvsBulk,
+} from "./envs"
 export { createDoc, createDocsBulk, updateDoc, deleteDoc } from "./docs"
 export {
   createReadme,
