@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Check, ClipboardPaste, Copy, KeyRound } from "lucide-react"
+import { Check, ClipboardPaste, Copy, KeyRound, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { EnvRecord, ProjectTab } from "@/lib/projects/types"
@@ -9,6 +9,7 @@ import {
   createEnv,
   createEnvsBulk,
   deleteEnv,
+  deleteEnvsBulk,
   updateEnv,
 } from "@/app/(app)/projects/actions"
 import { useActionDialog } from "@/hooks/use-action-dialog"
@@ -60,6 +61,7 @@ export function EnvsPanel({
   const { copied, copy } = useClipboard()
   const { confirm, dialog: confirmDialog } = useConfirm()
   const [, startDelete] = useTransition()
+  const [clearing, startClear] = useTransition()
 
   const byId = tabLookup(tabs)
   const scopeById = tabLookup(scopeTabs)
@@ -80,6 +82,42 @@ export function EnvsPanel({
   const activeScopeName =
     activeScope === ALL_TAB ? "all" : scopeById.get(activeScope)?.name ?? "all"
 
+  /**
+   * Clear the variables the list is currently showing. Both filters are sent to
+   * the server so the delete lands on exactly the rows on screen — with both
+   * pills on "All" that is the whole project, which is the fresh-start case.
+   *
+   * The confirmation names the slice rather than saying "all": "Delete all"
+   * while a tab pill is active would badly misdescribe the blast radius.
+   */
+  const clearFiltered = async () => {
+    const scopeName = activeScope === ALL_TAB ? null : scopeById.get(activeScope)?.name
+    const tabName = activeTab === ALL_TAB ? null : byId.get(activeTab)?.name
+    const slice = [scopeName && `scope ${scopeName}`, tabName && `tab ${tabName}`]
+      .filter(Boolean)
+      .join(" and ")
+    const count = filtered.length
+    const plural = count === 1 ? "variable" : "variables"
+
+    const ok = await confirm({
+      title: slice ? `Delete ${count} ${plural}?` : "Delete every variable?",
+      description: slice
+        ? `Deletes the ${count} ${plural} in ${slice}. This can't be undone.`
+        : `Deletes all ${count} ${plural} in this project, across every scope and tab. This can't be undone.`,
+      confirmLabel: `Delete ${count}`,
+      destructive: true,
+    })
+    if (!ok) return
+
+    startClear(() => {
+      deleteEnvsBulk({
+        projectId,
+        tabId: activeTab === ALL_TAB ? undefined : activeTab,
+        scopeTabId: activeScope === ALL_TAB ? undefined : activeScope,
+      }).then(() => {})
+    })
+  }
+
   return (
     <Panel
       title="Environment Variables"
@@ -99,7 +137,7 @@ export function EnvsPanel({
         )
       }
     >
-      {/* Scope tabs + copy */}
+      {/* Scope tabs + bulk actions */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <TabFilter
           tabs={scopeTabs}
@@ -112,16 +150,34 @@ export function EnvsPanel({
           activeClassName="bg-[var(--brand-primary)] text-white shadow-sm"
         />
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => copy(filtered.map((e) => `${e.key}=${e.value}`).join("\n"))}
-          disabled={filtered.length === 0}
-          className={cn("gap-1.5", copied && "border-emerald-300 text-emerald-700")}
-        >
-          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-          {copied ? "Copied" : `Copy ${activeScopeName}`}
-        </Button>
+        {/* Both buttons act on the filtered set, so they live together. */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => copy(filtered.map((e) => `${e.key}=${e.value}`).join("\n"))}
+            disabled={filtered.length === 0}
+            className={cn("gap-1.5", copied && "border-emerald-300 text-emerald-700")}
+          >
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? "Copied" : `Copy ${activeScopeName}`}
+          </Button>
+
+          {canEdit && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={clearFiltered}
+              disabled={filtered.length === 0 || clearing}
+              // Labelled with the count, not "all": the count is true under every
+              // filter combination, where the word "all" would not be.
+              className="gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <Trash2 className="size-3.5" />
+              {clearing ? "Deleting…" : `Delete ${filtered.length}`}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Component tab filter */}

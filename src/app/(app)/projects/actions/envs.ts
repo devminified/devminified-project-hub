@@ -156,6 +156,43 @@ export async function updateEnv(
   return { success: true }
 }
 
+/**
+ * Delete every env var matching the panel's current filter. An axis left
+ * `undefined` is unconstrained — that is how the "All" pill is expressed, so
+ * passing neither axis clears the project's variables outright.
+ *
+ * Deliberately mirrors what the panel renders: the caller sends the same two
+ * filters the list is drawn from, so the rows that vanish are exactly the rows
+ * the editor could see.
+ */
+export async function deleteEnvsBulk({
+  projectId,
+  tabId,
+  scopeTabId,
+}: {
+  projectId: string
+  tabId?: string
+  scopeTabId?: string
+}): Promise<ActionState & { deleted?: number }> {
+  if (!projectId) return { error: "Missing project." }
+  await requireProjectEditor(projectId)
+
+  const { count } = await prisma.envVar.deleteMany({
+    where: {
+      projectId,
+      // Spread rather than assign: `{ tabId: undefined }` would be read by
+      // Prisma as "no filter" anyway, but being explicit keeps the intent of an
+      // unconstrained axis legible next to the null-means-uncategorized rows.
+      ...(tabId ? { tabId } : {}),
+      ...(scopeTabId ? { scopeTabId } : {}),
+    },
+  })
+
+  if (count === 0) return { error: "No variables matched." }
+  await revalidateProject(projectId)
+  return { success: true, deleted: count }
+}
+
 export async function deleteEnv(id: string): Promise<ActionState> {
   const existing = await prisma.envVar.findUnique({
     where: { id },
