@@ -4,9 +4,14 @@ import { useActionState, useState } from "react"
 import Link from "next/link"
 import { AlertCircle, Eye, EyeOff, Lock, Mail } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { login, type LoginState } from "@/app/login/actions"
+
+/** Field shell: the 1.5px bordered row that holds a leading icon + the input. */
+const fieldShell =
+  "flex items-center gap-2.5 rounded-[10px] border-[1.5px] border-[#D6E0EF] bg-white px-3.5 transition-[border-color,box-shadow] duration-150 focus-within:border-[#1A66F0] focus-within:shadow-[0_0_0_4px_rgba(26,102,240,0.12)]"
+
+const fieldInput =
+  "min-w-0 flex-1 border-0 bg-transparent py-3 text-[14.5px] text-[#0B1B33] outline-none placeholder:text-[#A9B7CC]"
 
 export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -16,129 +21,115 @@ export function AuthForm() {
   )
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-10">
-        <h1
-          className="dm-animate-in text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl"
-          style={{ animationDelay: "0.1s" }}
-        >
-          Welcome back
-        </h1>
-        <p
-          className="dm-animate-in mt-3 text-sm text-slate-500 sm:text-base lg:text-lg"
+    <div className="w-full">
+      <h1
+        className="dm-animate-in font-display text-[30px] font-bold tracking-[-0.025em]"
+        style={{ animationDelay: "0.05s" }}
+      >
+        Welcome back
+      </h1>
+      <p
+        className="dm-animate-in mt-2 mb-7 text-[15px] text-[#5B6B85]"
+        style={{ animationDelay: "0.12s" }}
+      >
+        Sign in to access your Project Hub.
+      </p>
+
+      <form action={formAction} className="flex flex-col gap-[18px]">
+        <label
+          className="dm-animate-in flex flex-col gap-[7px]"
           style={{ animationDelay: "0.2s" }}
         >
-          Sign in to access your Project Hub.
-        </p>
-      </div>
-
-      <form action={formAction} className="space-y-5">
-        <div className="dm-animate-in" style={{ animationDelay: "0.3s" }}>
-          <Field label="Email">
-            <FieldIcon>
-              <Mail className="size-4 sm:size-5" />
-            </FieldIcon>
-            <Input
+          <span className="text-[13px] font-semibold text-[#16294A]">Email</span>
+          <div className={fieldShell}>
+            <Mail className="size-[18px] shrink-0 text-[#8496AF]" />
+            <input
               type="email"
               name="email"
               required
+              autoComplete="email"
               placeholder="you@company.com"
-              className="h-13 rounded-xl pl-11 text-base"
+              className={fieldInput}
             />
-          </Field>
-        </div>
+          </div>
+        </label>
 
-        <div className="dm-animate-in" style={{ animationDelay: "0.4s" }}>
-          <Field label="Password">
-            <FieldIcon>
-              <Lock className="size-4 sm:size-5" />
-            </FieldIcon>
-            <Input
+        <label
+          className="dm-animate-in flex flex-col gap-[7px]"
+          style={{ animationDelay: "0.28s" }}
+        >
+          <span className="text-[13px] font-semibold text-[#16294A]">
+            Password
+          </span>
+          <div className={fieldShell}>
+            <Lock className="size-[18px] shrink-0 text-[#8496AF]" />
+            <input
               type={showPassword ? "text" : "password"}
               name="password"
               required
+              autoComplete="current-password"
               placeholder="••••••••"
-              className="h-13 rounded-xl pl-11 pr-11 text-base"
+              className={fieldInput}
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
               aria-label={showPassword ? "Hide password" : "Show password"}
+              className="-mr-1 grid size-7 shrink-0 place-items-center rounded-md text-[#8496AF] transition-colors hover:text-[#1A66F0]"
             >
               {showPassword ? (
-                <EyeOff className="size-4 sm:size-5" />
+                <EyeOff className="size-[18px]" />
               ) : (
-                <Eye className="size-4 sm:size-5" />
+                <Eye className="size-[18px]" />
               )}
             </button>
-          </Field>
-        </div>
+          </div>
+        </label>
 
         <label
-          className="dm-animate-in flex items-center gap-2.5 text-sm text-slate-500"
-          style={{ animationDelay: "0.5s" }}
+          className="dm-animate-in flex w-fit cursor-pointer items-center gap-2.5"
+          style={{ animationDelay: "0.36s" }}
         >
           <input
             type="checkbox"
             name="remember"
-            className="size-4 rounded border-slate-300 text-[var(--brand-blue)] accent-[var(--brand-blue)]"
+            className="size-[18px] shrink-0 rounded-[5px] border-[1.5px] border-[#D6E0EF] accent-[#1A66F0]"
           />
-          Remember me
+          <span className="text-[14px] text-[#5B6B85]">Remember me</span>
         </label>
 
         {state.error && (
-          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertCircle className="size-4 shrink-0" />
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-[10px] border-[1.5px] border-[#F4CFCF] bg-[#FDECEC] px-3.5 py-3 text-[14px] leading-[1.5] text-[#C62828]"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
             {state.error}
           </div>
         )}
 
-        <Button
+        <button
           type="submit"
           disabled={pending}
-          style={{ animationDelay: "0.6s" }}
-          className="dm-animate-in h-13 w-full rounded-xl bg-[var(--brand-primary)] text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:opacity-95 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-70"
+          style={{ animationDelay: "0.44s" }}
+          className="dm-animate-in font-display w-full rounded-[10px] bg-[#1A66F0] px-5 py-3.5 text-[15px] font-semibold text-white transition-all duration-150 hover:bg-[#0F4FD1] hover:shadow-[0_8px_22px_rgba(26,102,240,0.28)] active:scale-[.99] disabled:pointer-events-none disabled:opacity-60"
         >
           {pending ? "Signing in…" : "Log in"}
-        </Button>
-      </form>
+        </button>
 
-      <p
-        className="dm-animate-in mt-6 text-center text-sm text-slate-500"
-        style={{ animationDelay: "0.7s" }}
-      >
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="font-medium text-[var(--brand-primary)] hover:underline"
+        <div
+          className="dm-animate-in text-center text-[14px] text-[#5B6B85]"
+          style={{ animationDelay: "0.52s" }}
         >
-          Sign up
-        </Link>
-      </p>
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-[#1A66F0] hover:text-[#0F4FD1]"
+          >
+            Sign up
+          </Link>
+        </div>
+      </form>
     </div>
-  )
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-slate-700">{label}</label>
-      <div className="relative">{children}</div>
-    </div>
-  )
-}
-
-function FieldIcon({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-      {children}
-    </span>
   )
 }

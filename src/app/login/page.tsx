@@ -1,50 +1,61 @@
-import Image from "next/image";
-import { FileText, FolderClosed, KeyRound, ShieldCheck } from "lucide-react";
+import { FileText, Folder, Key, ShieldCheck, type LucideIcon } from "lucide-react";
 
 import { AuthForm } from "@/components/auth-form";
 
-const highlights = [
-  { icon: FolderClosed, text: "All your projects in one elegant workspace" },
-  { icon: KeyRound, text: "Environment variables, scoped and secure" },
+const highlights: { icon: LucideIcon; text: string }[] = [
+  { icon: Folder, text: "All your projects in one elegant workspace" },
+  { icon: Key, text: "Environment variables, scoped and secure" },
   { icon: FileText, text: "Docs and READMEs at your fingertips" },
   { icon: ShieldCheck, text: "Fast, reliable, and built for teams" },
 ];
 
+/**
+ * The split sign-in screen from the Devminified design system ("Project Hub"
+ * sign-in board): a navy brand panel on the left, the form centred on the
+ * white panel to its right.
+ *
+ * The brand panel is decorative and drops out below `lg`, where the form takes
+ * the full width. Its headline is a <p>, not a heading: the page's real <h1>
+ * belongs to the form ("Welcome back"), which is the one thing every viewport
+ * renders.
+ */
 export default function LoginPage() {
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Left — brand panel */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[var(--brand-navy)] via-[var(--brand-blue)] to-[var(--brand-primary)] p-12 lg:flex lg:flex-col lg:justify-between">
-        {/* Decorative glow */}
-        <div className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-16 size-96 rounded-full bg-[var(--brand-primary)]/20 blur-3xl" />
+    <div className="font-body flex min-h-screen items-stretch bg-[#F4F7FB] text-[#0B1B33]">
+      <div className="hidden min-w-0 flex-1 basis-1/2 flex-col justify-between bg-[#0A1B38] px-[52px] py-11 text-white lg:flex">
+        <div className="dm-animate-in flex items-center gap-2.5">
+          <div className="font-display grid size-7 place-items-center rounded-[8px] bg-[#1A66F0] text-[15px] font-bold">
+            D
+          </div>
+          <div className="font-display text-[17px] font-bold tracking-[-0.01em]">
+            Devminified
+          </div>
+        </div>
 
-        <div className="relative" />
-
-        <div className="relative max-w-xl">
-          <h2
-            className="dm-animate-in text-3xl font-semibold leading-tight tracking-tight text-white lg:text-4xl"
+        <div className="max-w-[30ch]">
+          <p
+            className="dm-animate-in font-display text-[42px] leading-[1.12] font-bold tracking-[-0.03em]"
             style={{ animationDelay: "0.05s" }}
           >
             Transforming the digital landscape.
-          </h2>
+          </p>
           <p
-            className="dm-animate-in mt-5 text-sm leading-relaxed text-blue-100/90 lg:text-base"
-            style={{ animationDelay: "0.18s" }}
+            className="dm-animate-in mt-4 mb-9 max-w-[40ch] text-[15px] leading-[1.6] text-[#93A7C6]"
+            style={{ animationDelay: "0.15s" }}
           >
             Welcome to the Devminified Project Hub — manage every project,
             environment, and document from a single place.
           </p>
 
-          <ul className="mt-10 space-y-5">
+          <ul className="m-0 flex list-none flex-col gap-4 p-0">
             {highlights.map(({ icon: Icon, text }, i) => (
               <li
                 key={text}
-                className="dm-animate-in flex items-center gap-4 text-sm text-white lg:text-base"
-                style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+                className="dm-animate-in flex items-center gap-3.5 text-[15px]"
+                style={{ animationDelay: `${0.25 + i * 0.08}s` }}
               >
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white ring-1 ring-white/20">
-                  <Icon className="size-5" />
+                <span className="grid size-10 shrink-0 place-items-center rounded-[11px] bg-[#122A52] text-[#7FA9FF]">
+                  <Icon className="size-[19px]" />
                 </span>
                 {text}
               </li>
@@ -52,28 +63,16 @@ export default function LoginPage() {
           </ul>
         </div>
 
-        <p
-          className="dm-animate-in relative text-xs text-blue-100/70"
-          style={{ animationDelay: "0.75s" }}
+        <div
+          className="dm-animate-in text-[13px] text-[#6E86AC]"
+          style={{ animationDelay: "0.6s" }}
         >
-          © {2026} Devminified. All rights reserved.
-        </p>
+          © 2026 Devminified. All rights reserved.
+        </div>
       </div>
 
-      {/* Right — auth form */}
-      <div className="relative flex items-center justify-center bg-white px-6 py-12">
-        {/* Logo, top-right */}
-        <div className="dm-animate-in absolute right-6 top-6 sm:right-8 sm:top-8">
-          <Image
-            src="/devminified-logo.svg"
-            alt="Devminified"
-            width={260}
-            height={68}
-            priority
-            className="h-8 w-auto sm:h-9 lg:h-10"
-          />
-        </div>
-        <div className="w-full max-w-sm">
+      <div className="grid min-w-0 flex-1 basis-1/2 place-items-center bg-white px-8 py-12">
+        <div className="w-full max-w-[384px]">
           <AuthForm />
         </div>
       </div>

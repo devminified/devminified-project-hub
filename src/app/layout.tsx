@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Archivo, Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -11,6 +12,21 @@ const generalSans = localFont({
     { path: "./fonts/GeneralSans-Semibold.woff2", weight: "600", style: "normal" },
     { path: "./fonts/GeneralSans-Bold.woff2", weight: "700", style: "normal" },
   ],
+});
+
+// Devminified design-system faces (see "Crispers" design files): Poppins
+// carries headings and buttons, Archivo carries body copy. They are exposed as
+// variables only — the app still renders in General Sans; the sign-in screen
+// opts in via `font-display` / `font-body`.
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${generalSans.variable} h-full antialiased`}
+      className={`${generalSans.variable} ${poppins.variable} ${archivo.variable} h-full antialiased`}
     >
       {/* Browser extensions inject attributes (e.g. __processed_…) onto <body>
           before React hydrates, causing a benign hydration mismatch warning.
