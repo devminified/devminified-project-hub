@@ -122,6 +122,63 @@ export async function getProjectSummary(
   )
 }
 
+/**
+ * Search projects by free-text (name/description) and optionally filter by
+ * status or tag. Same scalar-only selection and visibility rules as
+ * `getProjectList` — just with extra `where` clauses layered on.
+ */
+export async function searchProjects(
+  viewer: Viewer,
+  {
+    query,
+    status,
+    tag,
+    archived = false,
+  }: { query?: string; status?: string; tag?: string; archived?: boolean } = {}
+): Promise<ProjectListItem[]> {
+  const rows = await prisma.project.findMany({
+    where: {
+      ...visibilityWhere(viewer),
+      archived,
+      ...(status ? { status: status as ProjectListItem["status"] } : {}),
+      ...(tag ? { tags: { has: tag } } : {}),
+      ...(query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { description: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      slug: true,
+      name: true,
+      status: true,
+      archived: true,
+      description: true,
+      tags: true,
+      imageUrl: true,
+      updatedAt: true,
+    },
+  })
+
+  return rows.map((p) => {
+    const updatedAt = toUpdatedAt(p.updatedAt)
+    return {
+      id: p.slug,
+      name: p.name,
+      status: p.status,
+      archived: p.archived,
+      description: p.description,
+      tags: p.tags,
+      imageUrl: projectImageSrc(p.imageUrl, p.slug, updatedAt, 88),
+      updatedAt,
+    }
+  })
+}
+
 /** Returns whether `viewer` may view `projectId` (admins always may). */
 export async function canViewProject(
   projectId: string,
@@ -202,6 +259,25 @@ export async function getProjectSecrets(slug: string): Promise<DetailSection[]> 
       select: { secretSections: true },
     })
     return p ? parseSecretSections(p.secretSections) : []
+  })
+}
+
+export type ProjectMember = {
+  id: string
+  email: string
+  name: string | null
+  role: string
+}
+
+/** Members with access to a project (its `ProjectAccess` relation). */
+export async function getProjectMembers(slug: string): Promise<ProjectMember[]> {
+  return cachedQuery(slug, "members", async () => {
+    const rows = await prisma.user.findMany({
+      where: { projects: { some: { slug } } },
+      orderBy: { email: "asc" },
+      select: { id: true, email: true, name: true, role: true },
+    })
+    return rows
   })
 }
 

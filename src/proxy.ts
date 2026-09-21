@@ -17,6 +17,14 @@ async function hasValidSession(request: NextRequest): Promise<boolean> {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // MCP requests authenticate via `Authorization: Bearer <token>` (checked in
+  // the route itself via `withMcpAuth`), not the cookie session — bypass the
+  // session gate here or every MCP client request would 307 to /login.
+  if (pathname.startsWith("/api/mcp")) {
+    return NextResponse.next()
+  }
+
   const isPublicPage = pathname === "/login" || pathname === "/signup"
   const authed = await hasValidSession(request)
 
