@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FileText, Folder, Key, ShieldCheck, type LucideIcon } from "lucide-react";
 
 import { AuthForm } from "@/components/auth-form";
@@ -23,16 +24,7 @@ export default function LoginPage() {
   return (
     <div className="font-body flex min-h-screen items-stretch bg-[#F4F7FB] text-[#0B1B33]">
       <div className="hidden min-w-0 flex-1 basis-1/2 flex-col justify-between bg-[#0A1B38] px-[52px] py-11 text-white lg:flex">
-        <div className="dm-animate-in flex items-center gap-2.5">
-          <div className="font-display grid size-7 place-items-center rounded-[8px] bg-[#1A66F0] text-[15px] font-bold">
-            D
-          </div>
-          <div className="font-display text-[17px] font-bold tracking-[-0.01em]">
-            Devminified
-          </div>
-        </div>
-
-        <div className="max-w-[30ch]">
+        <div className="my-auto max-w-[30ch]">
           <p
             className="dm-animate-in font-display text-[42px] leading-[1.12] font-bold tracking-[-0.03em]"
             style={{ animationDelay: "0.05s" }}
@@ -71,7 +63,22 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="grid min-w-0 flex-1 basis-1/2 place-items-center bg-white px-8 py-12">
+      <div className="relative grid min-w-0 flex-1 basis-1/2 place-items-center bg-white px-8 py-12">
+        {/* The wordmark is the dark-navy mark, so it sits on the white panel
+            rather than the brand panel, where it would disappear. Source is the
+            2766x608 master with its transparent padding trimmed off, so the
+            mark fills the box it is given at any density. */}
+        <Image
+          src="/devminified-logo.png"
+          alt="Devminified"
+          width={2766}
+          height={608}
+          priority
+          quality={100}
+          sizes="200px"
+          className="dm-animate-in absolute top-8 right-8 h-7 w-auto sm:h-8 lg:right-[52px] lg:h-9"
+        />
+
         <div className="w-full max-w-[384px]">
           <AuthForm />
         </div>
