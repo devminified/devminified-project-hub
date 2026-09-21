@@ -102,6 +102,10 @@ export async function createEnvsBulk(
   // `updateMany` rather than a per-id update: projects that collected duplicate
   // rows for one key under the old create-always behavior get every copy set to
   // the pasted value, instead of one copy silently keeping a stale one.
+  //
+  // Each entry is its own round trip, so the default 5s interactive-transaction
+  // timeout gets exceeded once a paste has more than ~15-20 lines (500 error).
+  // Give large pastes room to complete instead.
   await prisma.$transaction(
     entries.map((e) =>
       existingKeys.has(e.key)
@@ -112,7 +116,8 @@ export async function createEnvsBulk(
         : prisma.envVar.create({
             data: { projectId, key: e.key, value: e.value, tabId, scopeTabId },
           })
-    )
+    ),
+    { timeout: 30_000 }
   )
   await revalidateProject(projectId)
   return { success: true }
