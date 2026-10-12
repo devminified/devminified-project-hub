@@ -1,9 +1,19 @@
 "use client"
 
+import { isValidElement, type ReactElement } from "react";
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 import { cn } from "@/lib/utils"
+import { MermaidDiagram } from "@/components/ui/mermaid-diagram";
+
+// Fenced blocks always end in "\n", inline `<code>` (incl. raw HTML) never does,
+// so this keeps diagrams out of the middle of a paragraph.
+const isMermaidBlock = (className?: string, text?: unknown) =>
+  /(^|\s)language-mermaid(\s|$)/.test(className ?? "") &&
+  /\n$/.test(String(text ?? ""));
 
 /**
  * Renders markdown text as formatted content (headings, code blocks, links,
@@ -18,9 +28,15 @@ export function Markdown({
   className?: string
 }) {
   return (
-    <div className={cn("markdown-body text-sm leading-relaxed text-slate-700", className)}>
+    <div
+      className={cn(
+        "markdown-body text-sm leading-relaxed text-slate-700",
+        className,
+      )}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={{
           h1: (props) => (
             <h1
@@ -35,21 +51,33 @@ export function Markdown({
             />
           ),
           h3: (props) => (
-            <h3 className="mt-5 mb-2 text-lg font-semibold text-slate-900" {...props} />
+            <h3
+              className="mt-5 mb-2 text-lg font-semibold text-slate-900"
+              {...props}
+            />
           ),
           h4: (props) => (
-            <h4 className="mt-4 mb-2 text-base font-semibold text-slate-900" {...props} />
+            <h4
+              className="mt-4 mb-2 text-base font-semibold text-slate-900"
+              {...props}
+            />
           ),
           h5: (props) => (
-            <h5 className="mt-4 mb-2 text-sm font-semibold text-slate-900" {...props} />
+            <h5
+              className="mt-4 mb-2 text-sm font-semibold text-slate-900"
+              {...props}
+            />
           ),
           h6: (props) => (
-            <h6 className="mt-4 mb-2 text-sm font-semibold text-slate-500" {...props} />
+            <h6
+              className="mt-4 mb-2 text-sm font-semibold text-slate-500"
+              {...props}
+            />
           ),
           p: (props) => <p className="my-3 leading-7" {...props} />,
           a: (props) => (
             <a
-              className="font-medium text-[var(--brand-blue)] underline underline-offset-2 hover:opacity-80"
+              className="font-medium text-(--brand-blue) underline underline-offset-2 hover:opacity-80"
               target="_blank"
               rel="noreferrer noopener"
               {...props}
@@ -71,7 +99,11 @@ export function Markdown({
           hr: () => <hr className="my-6 border-slate-200" />,
           img: (props) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="my-3 max-w-full rounded-lg border border-slate-200" alt="" {...props} />
+            <img
+              className="my-3 max-w-full rounded-lg border border-slate-200"
+              alt=""
+              {...props}
+            />
           ),
           table: (props) => (
             <div className="my-4 overflow-x-auto">
@@ -88,13 +120,22 @@ export function Markdown({
             <td className="border border-slate-200 px-3 py-1.5" {...props} />
           ),
           code: ({ className: codeClass, children, ...props }) => {
-            const isBlock = /language-/.test(codeClass ?? "")
+            if (isMermaidBlock(codeClass, children)) {
+              return <MermaidDiagram chart={String(children).trim()} />;
+            }
+
+            const isBlock =
+              /language-/.test(codeClass ?? "") || /\n$/.test(String(children));
+
             if (isBlock) {
               return (
-                <code className={cn("font-mono text-[13px]", codeClass)} {...props}>
+                <code
+                  className={cn("font-mono text-[13px]", codeClass)}
+                  {...props}
+                >
                   {children}
                 </code>
-              )
+              );
             }
             return (
               <code
@@ -103,11 +144,37 @@ export function Markdown({
               >
                 {children}
               </code>
-            )
+            );
           },
-          pre: (props) => (
-            <pre
-              className="my-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-900 p-4 font-mono text-[13px] leading-relaxed text-slate-100"
+          pre: ({ children, ...props }) => {
+            // Mermaid diagrams draw their own box, so skip the dark code wrapper
+            if (isValidElement(children)) {
+              const { className, children: text } = (
+                children as ReactElement<{
+                  className?: string;
+                  children?: unknown;
+                }>
+              ).props;
+              if (isMermaidBlock(className, text)) return <>{children}</>;
+            }
+            return (
+              <pre
+                className="my-4 overflow-x-auto rounded-lg border border-slate-200 bg-slate-900 p-4 font-mono text-[13px] leading-relaxed text-slate-100"
+                {...props}
+              >
+                {children}
+              </pre>
+            );
+          },
+          details: (props) => (
+            <details
+              className="my-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2"
+              {...props}
+            />
+          ),
+          summary: (props) => (
+            <summary
+              className="cursor-pointer font-medium text-slate-700 select-none hover:text-slate-900"
               {...props}
             />
           ),
@@ -116,5 +183,5 @@ export function Markdown({
         {children}
       </ReactMarkdown>
     </div>
-  )
+  );
 }
