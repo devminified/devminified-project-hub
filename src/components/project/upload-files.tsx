@@ -3,12 +3,12 @@
 import { FileText } from "lucide-react"
 
 import { uploadProjectDocument } from "@/app/(app)/projects/actions"
-import { fileKind, isDocumentFile } from "./utils"
+import { fileTypeLabel, isDocumentFile } from "./utils"
 
 /**
  * A file the user picked in an upload dialog, pre-classified as either inline
- * text (content read client-side) or a binary document (PDF / Word) that must
- * be uploaded to storage on submit.
+ * text (content read client-side) or a file (PDF / Word, binary, or very large
+ * text) that must be uploaded to storage on submit.
  */
 export type PreparedFile = {
   title: string
@@ -26,27 +26,33 @@ export type PreparedEntry = {
   fileType?: string | null
 }
 
-/** Largest text file we inline; it must fit in the Server Action body limit. */
+/** Largest file accepted; matches the limit in `uploadProjectDocument`. */
+const MAX_FILE_BYTES = 15 * 1024 * 1024 // 15 MB
+
+/** Largest text file we inline; bigger ones are stored as files instead. */
 const MAX_TEXT_BYTES = 10 * 1024 * 1024 // 10 MB
 
 /**
- * Read a picked file: text is inlined; PDF/Word is held for upload on submit.
- * Throws with a user-facing message when a text file is too large or binary.
+ * True when decoded content isn't storable/viewable text: NUL bytes (which
+ * Postgres text columns reject) or U+FFFD from bytes that aren't valid UTF-8.
+ */
+function looksBinary(content: string) {
+  return content.includes("\u0000") || content.includes("�")
+}
+
+/**
+ * Read a picked file of any type: text is inlined; PDF/Word, binary and very
+ * large files are held for upload on submit. Throws with a user-facing message
+ * when the file is over the size limit.
  */
 export async function prepareFile(f: File): Promise<PreparedFile> {
-  if (isDocumentFile(f.name)) {
-    return { title: f.name, content: "", file: f, isDoc: true, bytes: f.size }
+  if (f.size > MAX_FILE_BYTES) {
+    throw new Error(`${f.name} is too large. Files must be under 15 MB.`)
   }
-  if (f.size > MAX_TEXT_BYTES) {
-    throw new Error(`${f.name} is too large. Text files must be under 10 MB.`)
-  }
+  const asUpload = { title: f.name, content: "", file: f, isDoc: true, bytes: f.size }
+  if (isDocumentFile(f.name) || f.size > MAX_TEXT_BYTES) return asUpload
   const content = await f.text()
-  // Postgres text columns reject NUL bytes, e.g. a pg_dump custom-format file.
-  if (content.includes("\u0000")) {
-    throw new Error(
-      `${f.name} looks like a binary file. Upload a plain-text export instead.`
-    )
-  }
+  if (looksBinary(content)) return asUpload
   return {
     title: f.name,
     content,
@@ -57,7 +63,7 @@ export async function prepareFile(f: File): Promise<PreparedFile> {
 }
 
 /**
- * Upload any binary documents to storage and return the entries ready to
+ * Upload any non-inline files to storage and return the entries ready to
  * persist. Text files pass through unchanged. Stops at the first upload error.
  */
 export async function uploadPreparedFiles(
@@ -111,7 +117,7 @@ export function PreparedFileList({ files }: { files: PreparedFile[] }) {
             <span className="truncate">{f.title}</span>
             <span className="ml-auto shrink-0 text-xs text-slate-400">
               {f.isDoc
-                ? `${fileKind(f.title, null) === "pdf" ? "PDF" : "Word"} · ${formatBytes(f.bytes)}`
+                ? `${fileTypeLabel(f.title, null)} · ${formatBytes(f.bytes)}`
                 : `${f.content.length} chars`}
             </span>
           </li>

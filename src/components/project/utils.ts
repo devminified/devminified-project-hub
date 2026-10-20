@@ -19,7 +19,7 @@ export function isMarkdownFile(title: string) {
   return /\.(md|markdown)$/i.test(title.trim())
 }
 
-/** True when a file name is an uploadable binary document (PDF / Word). */
+/** True when a file name is a PDF / Word document, always stored as a file. */
 export function isDocumentFile(name: string) {
   return /\.(pdf|docx?)$/i.test(name.trim())
 }
@@ -44,6 +44,15 @@ export function fileKind(
     return "word"
   }
   return null
+}
+
+/** Short label for a stored file: "PDF", "Word", or its extension. */
+export function fileTypeLabel(title: string, fileType?: string | null) {
+  const kind = fileKind(title, fileType)
+  if (kind === "pdf") return "PDF"
+  if (kind === "word") return "Word"
+  const ext = /\.([a-z0-9]+)$/i.exec(title.trim())?.[1]
+  return ext ? ext.toUpperCase() : "Uploaded"
 }
 
 /** Ensure a downloaded file has an extension, defaulting to `.md`. */
