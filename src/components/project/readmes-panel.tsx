@@ -351,12 +351,11 @@ function UploadReadmesDialog({
             <Upload className="size-6 text-blue-500" />
             <span className="text-sm font-medium text-slate-700">Click to choose files</span>
             <span className="text-xs text-slate-400">
-              Markdown / text, or PDF &amp; Word documents
+              Any file type, up to 15 MB each
             </span>
             <input
               type="file"
               multiple
-              accept=".md,.markdown,.txt,.pdf,.doc,.docx,text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={handleFiles}
             />

@@ -6,7 +6,7 @@ import { Code2, Download, Eye, FileText, Upload } from "lucide-react"
 import type { DocRecord, ProjectTab } from "@/lib/projects/types"
 import { Markdown } from "@/components/ui/markdown"
 import { FileOpenButton, FilePreview, fileLinks } from "./file-preview"
-import { fileKind, isMarkdownFile } from "./utils"
+import { fileKind, fileTypeLabel, isMarkdownFile } from "./utils"
 import {
   PreparedFileList,
   prepareFile,
@@ -194,9 +194,7 @@ function DocEntry({
           </div>
           <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
             {doc.fileUrl
-              ? fileKind(doc.title, doc.fileType) === "pdf"
-                ? "PDF document"
-                : "Word document"
+              ? `${fileTypeLabel(doc.title, doc.fileType)} ${fileKind(doc.title, doc.fileType) ? "document" : "file"}`
               : isMarkdown
                 ? "Markdown document"
                 : doc.description}
@@ -443,12 +441,11 @@ function UploadDocsDialog({
             <Upload className="size-6 text-blue-500" />
             <span className="text-sm font-medium text-slate-700">Click to choose files</span>
             <span className="text-xs text-slate-400">
-              Markdown / text, or PDF &amp; Word documents
+              Any file type, up to 15 MB each
             </span>
             <input
               type="file"
               multiple
-              accept=".md,.markdown,.txt,.json,.yml,.yaml,.sql,.pdf,.doc,.docx,text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={handleFiles}
             />

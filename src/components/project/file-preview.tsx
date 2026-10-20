@@ -8,7 +8,7 @@ import { fileKind } from "./utils"
 
 export type FileRecordKind = "doc" | "readme"
 
-/** Our own streaming route for a file-backed record (used for PDFs). */
+/** Our own streaming route for a file-backed record (all but Word). */
 function proxyPath(kind: FileRecordKind, id: string, download = false) {
   return `/files?kind=${kind}&rid=${id}${download ? "&download=1" : ""}`
 }
@@ -18,6 +18,7 @@ function proxyPath(kind: FileRecordKind, id: string, download = false) {
  * - PDF: served through our route (Cloudinary blocks raw PDF delivery).
  * - Word: previewed via the Microsoft Office online viewer over the public
  *   Cloudinary URL, and opened/downloaded directly.
+ * - Anything else: no preview; downloaded through our route.
  */
 export function fileLinks(
   kind: FileRecordKind,
@@ -34,7 +35,7 @@ export function fileLinks(
     const viewer = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`
     return { preview: viewer, open: fileUrl, docKind }
   }
-  return { preview: null, open: fileUrl, docKind }
+  return { preview: null, open: proxyPath(kind, id, true), docKind }
 }
 
 /**

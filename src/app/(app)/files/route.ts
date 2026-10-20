@@ -5,9 +5,9 @@ import { canViewProject } from "@/lib/projects/queries"
 /**
  * Streams an uploaded doc/readme file (stored in Cloudinary) through our own
  * origin with the correct content type and file name. This is needed because
- * Cloudinary refuses to deliver raw PDFs directly (a default security setting),
- * so those are stored without a `.pdf` extension and re-typed here. Access is
- * gated to viewers of the owning project.
+ * Cloudinary refuses to deliver some raw files directly (a default security
+ * setting), so non-Word files are stored without an extension and re-typed
+ * here. Access is gated to viewers of the owning project.
  *
  * GET /files?kind=doc|readme&rid=<recordId>[&download=1]
  */
@@ -46,13 +46,18 @@ export async function GET(req: Request) {
     record.fileType ||
     upstream.headers.get("content-type") ||
     "application/octet-stream"
-  const disposition = download ? "attachment" : "inline"
+  // Only PDFs are shown inline (in the preview iframe). Uploads can be any file
+  // type, and serving e.g. HTML or SVG inline from our origin would let it run
+  // script, so everything else is always a download.
+  const inline = !download && contentType.toLowerCase().includes("pdf")
+  const disposition = inline ? "inline" : "attachment"
   const safeName = record.title.replace(/["\\\r\n]/g, "")
 
   return new Response(upstream.body, {
     headers: {
       "Content-Type": contentType,
       "Content-Disposition": `${disposition}; filename="${safeName}"`,
+      "X-Content-Type-Options": "nosniff",
       // Auth-gated per user; short private cache is enough.
       "Cache-Control": "private, max-age=3600",
     },

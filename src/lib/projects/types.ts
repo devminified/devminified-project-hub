@@ -62,7 +62,7 @@ export type DocRecord = {
   description: string
   tabId: string | null
   updatedAt: string
-  // Set when the doc is a file upload (PDF / Word): Cloudinary URL + mime type.
+  // Set when the doc is a file upload (any type): Cloudinary URL + mime type.
   fileUrl: string | null
   fileType: string | null
 }
@@ -72,7 +72,7 @@ export type ReadmeRecord = {
   title: string
   content: string
   tabId: string | null
-  // Set when the readme is a file upload (PDF / Word): Cloudinary URL + mime type.
+  // Set when the readme is a file upload (any type): Cloudinary URL + mime type.
   fileUrl: string | null
   fileType: string | null
 }
