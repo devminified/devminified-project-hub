@@ -13,7 +13,7 @@ cloudinary.config({
 /** Folder all project images live under in Cloudinary. */
 export const PROJECT_IMAGE_FOLDER = "project-hub/projects"
 
-/** Folder all project document files (PDF / Word) live under in Cloudinary. */
+/** Folder all uploaded project files (docs / readmes) live under in Cloudinary. */
 export const PROJECT_FILE_FOLDER = "project-hub/files"
 
 /**
@@ -34,10 +34,9 @@ export async function uploadProjectImage(
 }
 
 /**
- * Signed, server-side upload of a document file (PDF / Word, passed as a base64
- * data URI) to Cloudinary as a `raw` resource. The original file name is kept
- * (with a unique suffix) so the delivery URL ends in the right extension and is
- * served with the correct content type. Returns the canonical secure URL.
+ * Signed, server-side upload of a file of any type (passed as a base64 data URI)
+ * to Cloudinary as a `raw` resource, under a unique public id derived from the
+ * original file name. Returns the canonical secure URL.
  */
 export async function uploadProjectFile(
   dataUri: string,
@@ -52,24 +51,24 @@ export async function uploadProjectFile(
 }
 
 /**
- * Cloudinary blocks *delivery* of raw files whose public id ends in these
- * extensions (a default account security setting). For these we drop the
- * extension on upload and serve the bytes through our own route with the right
- * content type instead. Word docs deliver fine, so they keep their extension.
+ * Extensions kept on the public id. Word docs are previewed by the Office online
+ * viewer straight from the public Cloudinary URL, which needs the extension.
+ * Everything else is stored without one, because Cloudinary blocks *delivery*
+ * of raw files with some extensions (PDF, ZIP, ... — an account security
+ * setting), and is served through our own `/files` route instead.
  */
-const BLOCKED_DELIVERY_EXTENSIONS = new Set([".pdf", ".zip"])
+const KEPT_EXTENSIONS = new Set([".doc", ".docx"])
 
 /**
  * Build a Cloudinary-safe public id from a file name: sanitize and add a unique
- * suffix so two "README.pdf" uploads don't collide. The extension is preserved
- * so raw delivery gets the right content type — except for extensions Cloudinary
- * refuses to deliver (PDF/ZIP), which are stripped and served via our route.
+ * suffix so two "README.pdf" uploads don't collide. Only Word extensions are
+ * kept (see `KEPT_EXTENSIONS`).
  */
 function uniquePublicId(fileName: string) {
   const name = fileName.trim()
   const dot = name.lastIndexOf(".")
   const rawExt = dot > 0 ? name.slice(dot) : ""
-  const ext = BLOCKED_DELIVERY_EXTENSIONS.has(rawExt.toLowerCase()) ? "" : rawExt
+  const ext = KEPT_EXTENSIONS.has(rawExt.toLowerCase()) ? rawExt : ""
   const base = (dot > 0 ? name.slice(0, dot) : name).replace(
     /[^a-zA-Z0-9._-]+/g,
     "-"
