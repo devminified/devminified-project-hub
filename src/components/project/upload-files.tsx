@@ -26,14 +26,30 @@ export type PreparedEntry = {
   fileType?: string | null
 }
 
-/** Read a picked file: text is inlined; PDF/Word is held for upload on submit. */
+/** Largest text file we inline; it must fit in the Server Action body limit. */
+const MAX_TEXT_BYTES = 10 * 1024 * 1024 // 10 MB
+
+/**
+ * Read a picked file: text is inlined; PDF/Word is held for upload on submit.
+ * Throws with a user-facing message when a text file is too large or binary.
+ */
 export async function prepareFile(f: File): Promise<PreparedFile> {
   if (isDocumentFile(f.name)) {
     return { title: f.name, content: "", file: f, isDoc: true, bytes: f.size }
   }
+  if (f.size > MAX_TEXT_BYTES) {
+    throw new Error(`${f.name} is too large. Text files must be under 10 MB.`)
+  }
+  const content = await f.text()
+  // Postgres text columns reject NUL bytes, e.g. a pg_dump custom-format file.
+  if (content.includes("\u0000")) {
+    throw new Error(
+      `${f.name} looks like a binary file. Upload a plain-text export instead.`
+    )
+  }
   return {
     title: f.name,
-    content: await f.text(),
+    content,
     file: null,
     isDoc: false,
     bytes: f.size,

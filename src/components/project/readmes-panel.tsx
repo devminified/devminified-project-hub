@@ -280,8 +280,11 @@ function UploadReadmesDialog({
     try {
       const read = await Promise.all(Array.from(list).map(prepareFile))
       setFiles(read)
-    } catch {
-      setError("Could not read one or more files.")
+    } catch (err) {
+      setFiles([])
+      setError(
+        err instanceof Error ? err.message : "Could not read one or more files."
+      )
     } finally {
       setReading(false)
     }
@@ -294,14 +297,20 @@ function UploadReadmesDialog({
     }
     const tab = tabId === "none" ? null : tabId
     startUpload(async () => {
-      const payload = await uploadPreparedFiles(files, projectId)
-      if (payload.error) {
-        setError(payload.error)
-        return
+      try {
+        const payload = await uploadPreparedFiles(files, projectId)
+        if (payload.error) {
+          setError(payload.error)
+          return
+        }
+        const res = await createReadmesBulk(projectId, payload.entries, tab)
+        if (res.error) setError(res.error)
+        else onOpenChange(false)
+      } catch {
+        // A rejected Server Action (e.g. body too large) would otherwise
+        // escape the transition and take down the whole page.
+        setError("Upload failed. Try fewer or smaller files.")
       }
-      const res = await createReadmesBulk(projectId, payload.entries, tab)
-      if (res.error) setError(res.error)
-      else onOpenChange(false)
     })
   }
 
