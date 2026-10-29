@@ -120,7 +120,7 @@ function SecretItemCard({ label, value }: { label: string; value: string }) {
         </p>
       </div>
       {linked && (
-        <ExternalLink className="size-4 shrink-0 text-slate-300 transition-colors group-hover:text-[var(--brand-blue)]" />
+        <ExternalLink className="size-4 shrink-0 text-slate-500 transition-colors group-hover:text-[var(--brand-blue)]" />
       )}
     </>
   )

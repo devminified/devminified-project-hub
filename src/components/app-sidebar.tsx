@@ -121,7 +121,7 @@ export function AppSidebar({
             <p className="truncate text-sm font-semibold text-slate-900">
               {user.name || "Member"}
             </p>
-            <p className="truncate text-xs text-slate-400">{user.email}</p>
+            <p className="truncate text-xs text-slate-500">{user.email}</p>
           </div>
           <form action={logout}>
             <button

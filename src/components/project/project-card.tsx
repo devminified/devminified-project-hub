@@ -55,13 +55,13 @@ export function ProjectCard({ project }: { project: ProjectListItem }) {
               </span>
             ))
           ) : (
-            <span className="text-xs text-slate-400">Updated {project.updatedAt}</span>
+            <span className="text-xs text-slate-500">Updated {project.updatedAt}</span>
           )}
           {project.tags.length > 2 && (
-            <span className="text-xs text-slate-400">+{project.tags.length - 2}</span>
+            <span className="text-xs text-slate-500">+{project.tags.length - 2}</span>
           )}
         </div>
-        <ArrowRight className="size-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-[var(--brand-primary)]" />
+        <ArrowRight className="size-4 shrink-0 text-slate-500 transition-all group-hover:translate-x-0.5 group-hover:text-[var(--brand-primary)]" />
       </div>
     </Link>
   )

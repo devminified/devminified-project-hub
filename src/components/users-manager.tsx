@@ -179,7 +179,7 @@ export function UsersManager({
                   <p className="truncate text-xs text-slate-500">{user.email}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="hidden text-xs text-slate-400 sm:inline">
+                  <span className="hidden text-xs text-slate-500 sm:inline">
                     Requested {user.createdAt}
                   </span>
                   <Button
@@ -233,7 +233,7 @@ export function UsersManager({
                 <TableCell className="px-5 py-4 font-medium text-slate-800">
                   {user.name || "—"}
                   {user.id === currentUserId && (
-                    <span className="ml-2 text-xs text-slate-400">(you)</span>
+                    <span className="ml-2 text-xs text-slate-500">(you)</span>
                   )}
                 </TableCell>
                 <TableCell className="px-5 py-4 text-slate-600">

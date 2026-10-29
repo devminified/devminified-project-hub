@@ -206,7 +206,7 @@ export function EnvsPanel({
                 <p className="truncate font-mono text-sm font-medium text-slate-800">
                   {env.key}
                 </p>
-                <p className="truncate font-mono text-xs text-slate-400">{env.value}</p>
+                <p className="truncate font-mono text-xs text-slate-500">{env.value}</p>
               </div>
               <TabBadge tab={env.tabId ? byId.get(env.tabId) : undefined} />
               <TabBadge tab={env.scopeTabId ? scopeById.get(env.scopeTabId) : undefined} />
