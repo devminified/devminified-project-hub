@@ -350,7 +350,7 @@ function UploadReadmesDialog({
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center transition-colors hover:border-blue-300 hover:bg-blue-50/40">
             <Upload className="size-6 text-blue-500" />
             <span className="text-sm font-medium text-slate-700">Click to choose files</span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-500">
               Any file type, up to 15 MB each
             </span>
             <input

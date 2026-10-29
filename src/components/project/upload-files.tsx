@@ -115,7 +115,7 @@ export function PreparedFileList({ files }: { files: PreparedFile[] }) {
           >
             <FileText className="size-3.5 shrink-0 text-blue-500" />
             <span className="truncate">{f.title}</span>
-            <span className="ml-auto shrink-0 text-xs text-slate-400">
+            <span className="ml-auto shrink-0 text-xs text-slate-500">
               {f.isDoc
                 ? `${fileTypeLabel(f.title, null)} · ${formatBytes(f.bytes)}`
                 : `${f.content.length} chars`}

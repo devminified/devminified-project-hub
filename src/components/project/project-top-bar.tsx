@@ -16,16 +16,16 @@ export function ProjectTopBar({ summary }: { summary: ProjectSummary }) {
         <ChevronLeft className="size-3.5" />
         Back
       </Link>
-      <div className="flex items-center gap-1.5 text-xs text-slate-400">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500">
         <FolderKanban className="size-3.5" />
         <Link href="/" className="transition-colors hover:text-slate-600">
           Projects
         </Link>
-        <span className="text-slate-300">/</span>
+        <span className="text-slate-500">/</span>
         <span className="font-semibold text-slate-700">{summary.name}</span>
       </div>
       <div className="flex-1" />
-      <span className="hidden items-center gap-1.5 text-xs text-slate-400 sm:flex">
+      <span className="hidden items-center gap-1.5 text-xs text-slate-500 sm:flex">
         <Clock className="size-3.5" />
         Updated {summary.updatedAt}
       </span>
